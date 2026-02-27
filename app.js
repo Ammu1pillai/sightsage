@@ -1,10 +1,10 @@
 // SightSage - Complete MVP Implementation with Groq
 class SightSage {
     constructor() {
-        // Your Groq API key
+        // Your Groq API key - In production, move this to a backend
         this.API_KEY = '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';
         
-        // Groq API endpoint (OpenAI-compatible)
+        // Groq API endpoint
         this.API_URL = 'https://api.groq.com/openai/v1/chat/completions';
         
         // Use Llama 4 Scout for vision tasks
@@ -21,6 +21,8 @@ class SightSage {
         this.voiceSpeed = 1;
         this.sosTapCount = 0;
         this.sosTimer = null;
+        this.recognition = null;
+        this.isListening = false;
         
         // DOM Elements
         this.initializeElements();
@@ -68,57 +70,118 @@ class SightSage {
         this.captureForCompare2 = document.getElementById('captureForCompare2');
         this.performComparison = document.getElementById('performComparison');
         this.comparisonResults = document.getElementById('comparisonResults');
+        this.medicine1Name = document.getElementById('medicine1Name');
+        this.medicine2Name = document.getElementById('medicine2Name');
         
         // Emergency
         this.emergencyOverlay = document.getElementById('emergencyOverlay');
         this.emergencyDetails = document.getElementById('emergencyDetails');
         this.dismissEmergency = document.getElementById('dismissEmergency');
+        this.sosWarning = document.getElementById('sosWarning');
+
+        // Verify all elements exist
+        this.checkElements();
+    }
+
+    checkElements() {
+        const elements = [
+            'camera', 'canvas', 'results', 'scanResults', 'voiceStatus', 'medicineCabinet',
+            'scanButton', 'compareButton', 'sosButton', 'voiceButton', 'textInputButton', 'readAloudButton',
+            'highContrastToggle', 'textSizeToggle', 'voiceSpeedToggle',
+            'textInputArea', 'textQuestion', 'submitText',
+            'comparisonMode', 'captureForCompare1', 'captureForCompare2', 'performComparison', 'comparisonResults',
+            'medicine1Name', 'medicine2Name',
+            'emergencyOverlay', 'emergencyDetails', 'dismissEmergency', 'sosWarning'
+        ];
+
+        elements.forEach(id => {
+            if (!this[id] && id !== 'medicine1Name' && id !== 'medicine2Name') {
+                console.warn(`Element not found: ${id}`);
+            }
+        });
     }
 
     initializeEventListeners() {
         // Core scanning
-        this.scanButton.addEventListener('click', () => {
-            console.log('Scan button clicked');
-            this.captureAndAnalyze('scan');
-        });
+        if (this.scanButton) {
+            this.scanButton.addEventListener('click', () => {
+                console.log('Scan button clicked');
+                this.captureAndAnalyze('scan');
+            });
+        }
         
-        this.compareButton.addEventListener('click', () => {
-            console.log('Compare button clicked');
-            this.toggleComparisonMode();
-        });
+        if (this.compareButton) {
+            this.compareButton.addEventListener('click', () => {
+                console.log('Compare button clicked');
+                this.toggleComparisonMode();
+            });
+        }
         
-        this.sosButton.addEventListener('click', () => {
-            console.log('SOS button clicked');
-            this.handleSOS();
-        });
+        if (this.sosButton) {
+            this.sosButton.addEventListener('click', () => {
+                console.log('SOS button clicked');
+                this.handleSOS();
+            });
+        }
         
         // Voice and text
-        this.voiceButton.addEventListener('click', () => this.startVoiceRecognition());
-        this.textInputButton.addEventListener('click', () => this.toggleTextInput());
-        this.submitText.addEventListener('click', () => this.processTextQuestion());
-        this.textQuestion.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.processTextQuestion();
-        });
+        if (this.voiceButton) {
+            this.voiceButton.addEventListener('click', () => this.startVoiceRecognition());
+        }
+        
+        if (this.textInputButton) {
+            this.textInputButton.addEventListener('click', () => this.toggleTextInput());
+        }
+        
+        if (this.submitText) {
+            this.submitText.addEventListener('click', () => this.processTextQuestion());
+        }
+        
+        if (this.textQuestion) {
+            this.textQuestion.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.processTextQuestion();
+            });
+        }
         
         // Read aloud
-        this.readAloudButton.addEventListener('click', () => {
-            if (this.scanResults.textContent) {
-                this.speak(this.scanResults.textContent);
-            }
-        });
+        if (this.readAloudButton) {
+            this.readAloudButton.addEventListener('click', () => {
+                if (this.scanResults && this.scanResults.textContent) {
+                    this.speak(this.scanResults.textContent);
+                }
+            });
+        }
         
         // Accessibility
-        this.highContrastToggle.addEventListener('click', () => this.toggleHighContrast());
-        this.textSizeToggle.addEventListener('click', () => this.toggleLargeText());
-        this.voiceSpeedToggle.addEventListener('click', () => this.toggleVoiceSpeed());
+        if (this.highContrastToggle) {
+            this.highContrastToggle.addEventListener('click', () => this.toggleHighContrast());
+        }
+        
+        if (this.textSizeToggle) {
+            this.textSizeToggle.addEventListener('click', () => this.toggleLargeText());
+        }
+        
+        if (this.voiceSpeedToggle) {
+            this.voiceSpeedToggle.addEventListener('click', () => this.toggleVoiceSpeed());
+        }
         
         // Comparison
-        this.captureForCompare1.addEventListener('click', () => this.captureForComparison(1));
-        this.captureForCompare2.addEventListener('click', () => this.captureForComparison(2));
-        this.performComparison.addEventListener('click', () => this.compareMedicines());
+        if (this.captureForCompare1) {
+            this.captureForCompare1.addEventListener('click', () => this.captureForComparison(1));
+        }
+        
+        if (this.captureForCompare2) {
+            this.captureForCompare2.addEventListener('click', () => this.captureForComparison(2));
+        }
+        
+        if (this.performComparison) {
+            this.performComparison.addEventListener('click', () => this.compareMedicines());
+        }
         
         // Emergency dismiss
-        this.dismissEmergency.addEventListener('click', () => this.hideEmergency());
+        if (this.dismissEmergency) {
+            this.dismissEmergency.addEventListener('click', () => this.hideEmergency());
+        }
         
         // Triple-tap SOS (Feature 17)
         document.addEventListener('click', () => this.detectTripleTap());
@@ -130,15 +193,21 @@ class SightSage {
             const stream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: 'environment' } 
             });
-            this.camera.srcObject = stream;
-            console.log('Camera initialized');
+            if (this.camera) {
+                this.camera.srcObject = stream;
+                console.log('Camera initialized');
+            }
         } catch (err) {
             console.error('Camera error:', err);
-            this.showError('Camera access needed for scanning');
+            this.showError('Camera access needed for scanning. Please grant camera permissions.');
         }
     }
 
     async captureImage() {
+        if (!this.camera || !this.canvas) {
+            throw new Error('Camera or canvas not available');
+        }
+
         // Ensure video is ready
         if (!this.camera.videoWidth) {
             await new Promise(resolve => {
@@ -151,7 +220,7 @@ class SightSage {
         const context = this.canvas.getContext('2d');
         context.drawImage(this.camera, 0, 0);
         
-        // Get base64 image (resize to stay under Groq's 4MB limit) [citation:2]
+        // Get base64 image (resize to stay under Groq's 4MB limit)
         const imageData = this.canvas.toDataURL('image/jpeg', 0.6);
         return imageData;
     }
@@ -173,7 +242,9 @@ class SightSage {
 
         try {
             console.log('Sending to Groq...');
-            this.voiceStatus.textContent = "🔍 Analyzing with Groq...";
+            if (this.voiceStatus) {
+                this.voiceStatus.textContent = "🔍 Analyzing with Groq...";
+            }
             
             const response = await fetch(this.API_URL, {
                 method: 'POST',
@@ -228,10 +299,14 @@ class SightSage {
 
     async captureAndAnalyze(mode = 'scan') {
         try {
-            this.voiceStatus.textContent = "📸 Capturing image...";
+            if (this.voiceStatus) {
+                this.voiceStatus.textContent = "📸 Capturing image...";
+            }
             const imageData = await this.captureImage();
             
-            this.voiceStatus.textContent = "🔍 Analyzing with Groq...";
+            if (this.voiceStatus) {
+                this.voiceStatus.textContent = "🔍 Analyzing with Groq...";
+            }
             const analysis = await this.analyzeMedicine(imageData, mode);
             
             // Parse and store medicine info
@@ -256,6 +331,7 @@ class SightSage {
         } catch (error) {
             console.error('Capture error:', error);
             this.displayResults(`Error: ${error.message}`);
+            return null;
         }
     }
 
@@ -271,6 +347,8 @@ class SightSage {
     }
 
     extractField(text, fieldNumber) {
+        if (!text) return null;
+        
         const patterns = [
             new RegExp(`${fieldNumber}\\.?\\s*([^\\n]+)`),  // "1. Medicine name"
             new RegExp(`${fieldNumber}[:\\)]\\s*([^\\n]+)`, 'i'), // "1: Name" or "1) Name"
@@ -320,8 +398,10 @@ class SightSage {
             const data = await response.json();
             const comparison = data.choices[0].message.content;
             
-            this.comparisonResults.innerHTML = comparison.replace(/\n/g, '<br>');
-            this.comparisonResults.classList.remove('hidden');
+            if (this.comparisonResults) {
+                this.comparisonResults.innerHTML = comparison.replace(/\n/g, '<br>');
+                this.comparisonResults.classList.remove('hidden');
+            }
             
             if (comparison.toLowerCase().includes('critical')) {
                 this.showEmergency('⚠️ CRITICAL INTERACTION DETECTED');
@@ -329,14 +409,18 @@ class SightSage {
             
             this.speak("Comparison complete. " + comparison.substring(0, 100));
         } catch (error) {
-            this.comparisonResults.innerHTML = "Error comparing medicines";
+            if (this.comparisonResults) {
+                this.comparisonResults.innerHTML = "Error comparing medicines";
+            }
         }
     }
 
     // ============== VOICE FUNCTIONS ==============
     initializeVoiceCommands() {
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-            this.voiceStatus.textContent = "Voice not supported in this browser";
+            if (this.voiceStatus) {
+                this.voiceStatus.textContent = "Voice not supported in this browser";
+            }
             return;
         }
 
@@ -347,14 +431,16 @@ class SightSage {
 
         this.recognition.onresult = (event) => {
             const command = event.results[event.results.length - 1][0].transcript.toLowerCase();
-            this.voiceStatus.textContent = `Heard: "${command}"`;
+            if (this.voiceStatus) {
+                this.voiceStatus.textContent = `Heard: "${command}"`;
+            }
             
             if (command.includes('scan this') || command.includes('scan')) {
                 this.captureAndAnalyze('scan');
             } else if (command.includes('compare these') || command.includes('compare')) {
                 this.toggleComparisonMode();
             } else if (command.includes('read warnings')) {
-                if (this.scanResults.textContent) {
+                if (this.scanResults && this.scanResults.textContent) {
                     this.speak(this.scanResults.textContent);
                 }
             } else if (command.includes('emergency') || command.includes('help')) {
@@ -363,25 +449,61 @@ class SightSage {
         };
 
         this.recognition.onerror = () => {
-            this.voiceStatus.textContent = "Voice recognition error. Try typing.";
+            if (this.voiceStatus) {
+                this.voiceStatus.textContent = "Voice recognition error. Try typing.";
+            }
+            this.isListening = false;
+        };
+
+        this.recognition.onend = () => {
+            this.isListening = false;
         };
     }
 
     startVoiceRecognition() {
+        if (!this.recognition) {
+            if (this.voiceStatus) {
+                this.voiceStatus.textContent = "Voice recognition not available";
+            }
+            return;
+        }
+
         try {
-            this.recognition.start();
-            this.voiceStatus.textContent = "🎤 Listening... Say a command";
-            setTimeout(() => {
+            if (this.isListening) {
                 this.recognition.stop();
-                this.voiceStatus.textContent = "Voice mode ready";
+                this.isListening = false;
+                return;
+            }
+            
+            this.recognition.start();
+            this.isListening = true;
+            if (this.voiceStatus) {
+                this.voiceStatus.textContent = "🎤 Listening... Say a command";
+            }
+            
+            // Auto-stop after 10 seconds
+            setTimeout(() => {
+                if (this.isListening) {
+                    this.recognition.stop();
+                    this.isListening = false;
+                    if (this.voiceStatus) {
+                        this.voiceStatus.textContent = "Voice mode ready";
+                    }
+                }
             }, 10000);
         } catch (e) {
-            this.voiceStatus.textContent = "Click 'Type' to ask questions";
+            if (this.voiceStatus) {
+                this.voiceStatus.textContent = "Click 'Type' to ask questions";
+            }
+            this.isListening = false;
         }
     }
 
     speak(text) {
         if (!text) return;
+        
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
         
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = this.voiceSpeed;
@@ -392,17 +514,23 @@ class SightSage {
     }
 
     toggleTextInput() {
-        this.textInputArea.classList.toggle('hidden');
-        if (!this.textInputArea.classList.contains('hidden')) {
-            this.textQuestion.focus();
+        if (this.textInputArea) {
+            this.textInputArea.classList.toggle('hidden');
+            if (!this.textInputArea.classList.contains('hidden') && this.textQuestion) {
+                this.textQuestion.focus();
+            }
         }
     }
 
     async processTextQuestion() {
+        if (!this.textQuestion) return;
+        
         const question = this.textQuestion.value;
         if (!question) return;
 
-        this.voiceStatus.textContent = "Processing question...";
+        if (this.voiceStatus) {
+            this.voiceStatus.textContent = "Processing question...";
+        }
         
         const context = this.medicines.current ? 
             `Current medicine: ${JSON.stringify(this.medicines.current)}` : 
@@ -435,7 +563,9 @@ class SightSage {
             this.displayResults(answer);
             this.speak(answer);
             this.textQuestion.value = '';
-            this.textInputArea.classList.add('hidden');
+            if (this.textInputArea) {
+                this.textInputArea.classList.add('hidden');
+            }
         } catch (error) {
             this.displayResults("Error processing question");
         }
@@ -459,8 +589,9 @@ class SightSage {
     }
 
     handleSOS() {
-        const sosInfo = document.getElementById('sosWarning');
-        sosInfo.classList.remove('hidden');
+        if (this.sosWarning) {
+            this.sosWarning.classList.remove('hidden');
+        }
         
         let emergencyText = "🚨 EMERGENCY - Current Medicines:\n";
         
@@ -478,18 +609,26 @@ class SightSage {
     }
 
     showEmergency(message) {
-        this.emergencyDetails.innerHTML = message.replace(/\n/g, '<br>');
-        this.emergencyOverlay.classList.remove('hidden');
+        if (this.emergencyDetails) {
+            this.emergencyDetails.innerHTML = message.replace(/\n/g, '<br>');
+        }
+        if (this.emergencyOverlay) {
+            this.emergencyOverlay.classList.remove('hidden');
+        }
     }
 
     hideEmergency() {
-        this.emergencyOverlay.classList.add('hidden');
-        document.getElementById('sosWarning').classList.add('hidden');
+        if (this.emergencyOverlay) {
+            this.emergencyOverlay.classList.add('hidden');
+        }
+        if (this.sosWarning) {
+            this.sosWarning.classList.add('hidden');
+        }
     }
 
     isExpired(expiryDate) {
         if (!expiryDate || expiryDate === 'Not visible') return false;
-        const expDate = new Date(expiryDate);
+        const expDate = new Date(expiryDate.split('/').reverse().join('-'));
         const today = new Date();
         return expDate < today;
     }
@@ -504,7 +643,8 @@ class SightSage {
             expired: medicine.expiry ? this.isExpired(medicine.expiry) : false
         });
         
-        cabinet = cabinet.slice(0, 5);
+        // Keep only last 10 items
+        cabinet = cabinet.slice(0, 10);
         
         localStorage.setItem('medicineCabinet', JSON.stringify(cabinet));
         this.displayCabinet();
@@ -515,10 +655,12 @@ class SightSage {
     }
 
     displayCabinet() {
+        if (!this.medicineCabinet) return;
+        
         const cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
         
         if (cabinet.length === 0) {
-            this.medicineCabinet.innerHTML = '<p>No medicines saved yet. Scan your first medicine!</p>';
+            this.medicineCabinet.innerHTML = '<p class="empty-cabinet">No medicines saved yet. Scan your first medicine!</p>';
             return;
         }
         
@@ -526,34 +668,56 @@ class SightSage {
             <div class="medicine-item ${med.expired ? 'expired' : ''}">
                 ${med.expired ? '<span class="expired-label">⚠️ EXPIRED ⚠️</span>' : ''}
                 <strong>${med.name || 'Unknown'}</strong><br>
-                ${med.expiry ? `Expires: ${med.expiry}<br>` : ''}
-                ${med.ingredients ? `Ingredients: ${med.ingredients.substring(0, 50)}...<br>` : ''}
-                <small>Scanned: ${new Date(med.scannedAt).toLocaleDateString()}</small>
+                ${med.expiry ? `<span class="expiry-date">Expires: ${med.expiry}</span><br>` : ''}
+                ${med.ingredients ? `<small>${med.ingredients.substring(0, 50)}...</small><br>` : ''}
+                <small class="scan-date">Scanned: ${new Date(med.scannedAt).toLocaleDateString()}</small>
             </div>
         `).join('');
     }
 
     // ============== UI FUNCTIONS ==============
     displayResults(text) {
-        this.scanResults.innerHTML = text.replace(/\n/g, '<br>');
-        this.results.classList.remove('hidden');
+        if (this.scanResults) {
+            this.scanResults.innerHTML = text.replace(/\n/g, '<br>');
+        }
+        if (this.results) {
+            this.results.classList.remove('hidden');
+        }
     }
 
     toggleComparisonMode() {
-        this.comparisonMode.classList.toggle('hidden');
-        this.medicines.compare1 = null;
-        this.medicines.compare2 = null;
-        this.comparisonResults.innerHTML = '';
+        if (this.comparisonMode) {
+            this.comparisonMode.classList.toggle('hidden');
+            this.medicines.compare1 = null;
+            this.medicines.compare2 = null;
+            
+            if (this.medicine1Name) {
+                this.medicine1Name.textContent = 'Medicine 1';
+            }
+            if (this.medicine2Name) {
+                this.medicine2Name.textContent = 'Medicine 2';
+            }
+            if (this.comparisonResults) {
+                this.comparisonResults.innerHTML = '';
+                this.comparisonResults.classList.add('hidden');
+            }
+        }
     }
 
     async captureForComparison(slot) {
         const medicine = await this.captureAndAnalyze('compare');
-        if (slot === 1) {
-            this.medicines.compare1 = medicine;
-            document.getElementById('medicine1Name').textContent = medicine.name || 'Medicine 1';
-        } else {
-            this.medicines.compare2 = medicine;
-            document.getElementById('medicine2Name').textContent = medicine.name || 'Medicine 2';
+        if (medicine) {
+            if (slot === 1) {
+                this.medicines.compare1 = medicine;
+                if (this.medicine1Name) {
+                    this.medicine1Name.textContent = medicine.name || 'Medicine 1';
+                }
+            } else {
+                this.medicines.compare2 = medicine;
+                if (this.medicine2Name) {
+                    this.medicine2Name.textContent = medicine.name || 'Medicine 2';
+                }
+            }
         }
     }
 
@@ -579,15 +743,25 @@ class SightSage {
     }
 
     showError(message) {
-        this.voiceStatus.textContent = message;
-        setTimeout(() => {
-            this.voiceStatus.textContent = 'Ready';
-        }, 3000);
+        if (this.voiceStatus) {
+            this.voiceStatus.textContent = message;
+            setTimeout(() => {
+                if (this.voiceStatus) {
+                    this.voiceStatus.textContent = 'Ready';
+                }
+            }, 3000);
+        }
     }
 }
 
-// Initialize app
+// Initialize app with error handling
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, starting app...');
-    window.app = new SightSage();
+    try {
+        window.app = new SightSage();
+        console.log('App initialized successfully');
+    } catch (error) {
+        console.error('Failed to initialize app:', error);
+        alert('Failed to initialize app. Please refresh the page.');
+    }
 });
