@@ -517,6 +517,10 @@ Important: Please write naturally like you're speaking to someone, not as a list
         this.medicineCabinet.innerHTML = html;
     }
     
+    loadHistory() {
+        this.displayCabinet();
+    }
+
     extractFieldFlexible(text, keywords) {
         if (!text) return null;
         const lowerText = text.toLowerCase();
