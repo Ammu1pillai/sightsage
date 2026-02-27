@@ -293,12 +293,12 @@ class SightSage {
     async analyzeWithGroq(imageData) {
         const base64Image = imageData.split(',')[1];
         
-        const prompt = `You are a medicine identification assistant. Analyze this medicine image and provide:
+        const prompt = `You are a medicine identification assistant for elderly people and blind people to understand about their medicine. Analyze this medicine image and provide:
 1. Medicine name
-2. Expiry date (if visible, format as DD/MM/YYYY)
+2. Expiry date (if visible, format as DD/MM/YYYY)(else ask for the image having expiry date)
 3. Active ingredients
-4. Important warnings
-5. Physical description (color, shape)
+4. Important warnings about what it should be taken with, after food or before food, good for pregnant or old people with cardiac risks
+5. Physical description (color, shape, what it is used for, side effects)
 
 Format clearly with each section on a new line starting with the number.`;
         
