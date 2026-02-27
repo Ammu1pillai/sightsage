@@ -432,45 +432,48 @@ Important: Please write naturally like you're speaking to someone, not as a list
         for (const sentence of sentences) {
             const lower = sentence.toLowerCase().trim();
             
-            // Look for usage description
-            if (lower.includes('used to treat') || 
-                lower.includes('is used for') ||
-                lower.includes('treats') ||
-                lower.includes('for treating')) {
-                
-                let use = sentence.trim();
-                
-                // Extract after the keywords
-                if (lower.includes('used to treat')) {
-                    use = use.split(/used to treat/i)[1] || use;
-                } else if (lower.includes('is used for')) {
-                    use = use.split(/is used for/i)[1] || use;
-                } else if (lower.includes('treats')) {
-                    use = use.split(/treats/i)[1] || use;
-                } else if (lower.includes('for treating')) {
-                    use = use.split(/for treating/i)[1] || use;
+            // Keywords that indicate usage description
+            const keywords = [
+                'used to',
+                'used for',
+                'treats',
+                'treating',
+                'treatment of',
+                'helps',
+                'prevents',
+                'protects against',
+                'repels',
+                'relieves',
+                'reduces',
+                'controls',
+                'manages',
+                'indicated for',
+                'for the',
+                'is a'
+            ];
+            
+            for (const keyword of keywords) {
+                if (lower.includes(keyword)) {
+                    // Get everything after the keyword
+                    let use = sentence.trim();
+                    const keywordIndex = lower.indexOf(keyword);
+                    use = use.substring(keywordIndex + keyword.length).trim();
+                    
+                    // Clean up the beginning
+                    use = use.replace(/^[:\s-]+/, '')
+                            .replace(/^to\s+/i, '')
+                            .replace(/^a\s+|^an\s+|^the\s+/i, '')
+                            .trim();
+                    
+                    // If we got something meaningful, return it
+                    if (use && use.length > 3) {
+                        use = use.charAt(0).toUpperCase() + use.slice(1);
+                        if (use.length > 60) {
+                            use = use.substring(0, 57) + '...';
+                        }
+                        return use;
+                    }
                 }
-                
-                // Clean up
-                use = use.replace(/^[:\s]+/, '')
-                        .replace(/[.,;:\s]+$/, '')
-                        .trim();
-                
-                if (use && use.length > 5) {
-                    return use.charAt(0).toUpperCase() + use.slice(1);
-                }
-            }
-        }
-        
-        // If no keywords, look for sentences about what it does
-        for (const sentence of sentences) {
-            const trimmed = sentence.trim();
-            if (trimmed.length > 10 && trimmed.length < 100 &&
-                !trimmed.toLowerCase().includes('expir') &&
-                !trimmed.toLowerCase().includes('color') &&
-                !trimmed.toLowerCase().includes('shape') &&
-                !trimmed.toLowerCase().includes('side effect')) {
-                return trimmed;
             }
         }
         
