@@ -386,15 +386,18 @@ Important: Please write naturally like you're speaking to someone, not as a list
     extractMedicineName(analysis) {
         if (!analysis) return null;
         
-        // Look for medicine name patterns
+        // Look for medicine name patterns and extract just the name
         const patterns = [
-            // "called [Name]" or "name is [Name]"
-            /(?:called|name(?:\s+is)?)\s+([A-Z][a-zA-Z]+(?:[-\s][A-Z][a-zA-Z]+)*)/i,
+            // "called [Name]" - capture only the name
+            /called\s+([A-Z][a-zA-Z]+(?:[-\s][A-Z][a-zA-Z]+)*)/i,
             
-            // "This is [Name]" or "This medicine is [Name]"
+            // "name is [Name]" - capture only the name
+            /name(?:\s+is)?\s+([A-Z][a-zA-Z]+(?:[-\s][A-Z][a-zA-Z]+)*)/i,
+            
+            // "This is [Name]" - capture only the name
             /this\s+(?:is|medicine\s+is)\s+([A-Z][a-zA-Z]+(?:[-\s][A-Z][a-zA-Z]+)*)/i,
             
-            // "[Name] is used" at start
+            // "[Name] is used" - capture only the name at start
             /^([A-Z][a-zA-Z]+(?:[-\s][A-Z][a-zA-Z]+)*)\s+is\s+used/i
         ];
         
@@ -402,21 +405,11 @@ Important: Please write naturally like you're speaking to someone, not as a list
             const match = analysis.match(pattern);
             if (match && match[1]) {
                 let name = match[1].trim();
-                // Basic validation - not too long, not common words
-                if (name.length >= 2 && name.length <= 30 && 
-                    !name.match(/^(this|that|these|those|your|please|hello|thank)$/i)) {
+                // Clean up any remaining punctuation
+                name = name.replace(/[.,;:]$/, '').trim();
+                if (name.length >= 2 && name.length <= 30) {
                     return name;
                 }
-            }
-        }
-        
-        // If no pattern matches, take first capitalized word that's not common
-        const words = analysis.split(' ');
-        for (let i = 0; i < Math.min(3, words.length); i++) {
-            const word = words[i].replace(/[^A-Za-z]/g, '');
-            if (word.length >= 3 && /^[A-Z][a-z]+$/.test(word) &&
-                !word.match(/^(This|That|These|Those|Your|Please|Hello|Thank|Would|Should|Could|Have|With|From)$/)) {
-                return word;
             }
         }
         
@@ -430,28 +423,34 @@ Important: Please write naturally like you're speaking to someone, not as a list
         const sentences = analysis.split(/[.!?]/);
         for (const sentence of sentences) {
             const lowerSentence = sentence.toLowerCase().trim();
+            
+            // Look for usage keywords
             if (lowerSentence.includes('used for') || 
                 lowerSentence.includes('treats') ||
-                lowerSentence.includes('helps') ||
-                lowerSentence.includes('for treating') ||
-                lowerSentence.includes('to treat')) {
+                lowerSentence.includes('helps with')) {
                 
                 let use = sentence.trim();
-                // Extract just the key part after the keywords
-                use = use.replace(/^(.*?(?:used for|treats|helps|for treating|to treat|for))/, '').trim();
                 
-                // Clean up any remaining prefixes
-                use = use.replace(/^(a|an|the|this|that)\s+/i, '').trim();
+                // Extract text AFTER the keywords
+                if (lowerSentence.includes('used for')) {
+                    use = use.split(/used for/i)[1] || use;
+                } else if (lowerSentence.includes('treats')) {
+                    use = use.split(/treats/i)[1] || use;
+                } else if (lowerSentence.includes('helps with')) {
+                    use = use.split(/helps with/i)[1] || use;
+                }
+                
+                // Clean up
+                use = use.replace(/^[:\s]+/, '') // Remove leading colons/spaces
+                        .replace(/[.,;:]$/, '') // Remove trailing punctuation
+                        .trim();
                 
                 // Take only up to first comma or 'and' for brevity
                 use = use.split(/,| and /)[0].trim();
                 
-                if (use.length > 3 && use.length < 80) {
+                if (use.length > 3 && use.length < 60) {
                     // Capitalize first letter
                     use = use.charAt(0).toUpperCase() + use.slice(1);
-                    if (use.length > 50) {
-                        use = use.substring(0, 47) + '...';
-                    }
                     return use;
                 }
             }
