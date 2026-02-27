@@ -426,51 +426,49 @@ Important: Please write naturally like you're speaking to someone, not as a list
     extractMedicineUse(analysis) {
         if (!analysis) return null;
         
-        // Split into sentences
-        const sentences = analysis.split(/[.!?]/);
+        // Convert to lowercase for searching
+        const lowerAnalysis = analysis.toLowerCase();
         
-        for (const sentence of sentences) {
-            const lower = sentence.toLowerCase().trim();
-            
-            // Keywords that indicate usage description
-            const keywords = [
-                'used to',
-                'used for',
-                'treats',
-                'treating',
-                'treatment of',
-                'helps',
-                'prevents',
-                'protects against',
-                'repels',
-                'relieves',
-                'reduces',
-                'controls',
-                'manages',
-                'indicated for',
-                'for the',
-                'is a'
-            ];
-            
-            for (const keyword of keywords) {
-                if (lower.includes(keyword)) {
-                    // Get everything after the keyword
-                    let use = sentence.trim();
-                    const keywordIndex = lower.indexOf(keyword);
-                    use = use.substring(keywordIndex + keyword.length).trim();
+        // Keywords to look for
+        const keywords = [
+            'used to treat',
+            'used for',
+            'used to',
+            'treats',
+            'treating',
+            'for treating',
+            'to treat',
+            'helps with',
+            'helps to',
+            'works by',
+            'prevents',
+            'protects against',
+            'repels',
+            'relieves',
+            'reduces',
+            'controls',
+            'manages'
+        ];
+        
+        for (const keyword of keywords) {
+            const keywordIndex = lowerAnalysis.indexOf(keyword);
+            if (keywordIndex !== -1) {
+                // Find the full stop after the keyword
+                const afterKeyword = analysis.substring(keywordIndex + keyword.length);
+                const fullStopIndex = afterKeyword.indexOf('.');
+                
+                if (fullStopIndex !== -1) {
+                    // Extract text from after keyword until the full stop
+                    let use = afterKeyword.substring(0, fullStopIndex).trim();
                     
-                    // Clean up the beginning
-                    use = use.replace(/^[:\s-]+/, '')
-                            .replace(/^to\s+/i, '')
-                            .replace(/^a\s+|^an\s+|^the\s+/i, '')
+                    // Clean up
+                    use = use.replace(/^[:\s-]+/, '')  // Remove leading punctuation
+                            .replace(/[,\s]+$/, '')    // Remove trailing commas
                             .trim();
                     
-                    // If we got something meaningful, return it
-                    if (use && use.length > 3) {
+                    if (use && use.length > 2) {
+                        // Capitalize first letter
                         use = use.charAt(0).toUpperCase() + use.slice(1);
-                        if (use.length > 60) {
-                            use = use.substring(0, 57) + '...';
-                        }
                         return use;
                     }
                 }
