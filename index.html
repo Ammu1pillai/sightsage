@@ -2,221 +2,198 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; media-src *; img-src * data:;">
-    
-    <!-- Primary Meta Tags -->
-    <title>SightSage - Premium AI-Powered Medicine Scanner</title>
-    <meta name="title" content="SightSage - AI Medicine Scanner for Visually Impaired">
-    <meta name="description" content=" revolutionary voice-first medicine scanner that helps visually impaired users identify medications, check expiry dates, and get critical warnings using AI.">
-    <meta name="keywords" content="medicine scanner, medication identifier, visually impaired, accessibility, AI healthcare">
-    <meta name="author" content="SightSage">
-    <meta name="theme-color" content="#6366f1">
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://sightsage.app">
-    <meta property="og:title" content="SightSage - AI Medicine Scanner">
-    <meta property="og:description" content="Voice-first medicine scanner for the visually impaired">
-    <meta property="og:image" content="https://sightsage.app/og-image.jpg">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://sightsage.app">
-    <meta property="twitter:title" content="SightSage - AI Medicine Scanner">
-    <meta property="twitter:description" content="Voice-first medicine scanner for the visually impaired">
-    <meta property="twitter:image" content="https://sightsage.app/twitter-image.jpg">
-
-    <!-- Stylesheets & Fonts -->
-    <link rel="stylesheet" href="styles.css?v=3.0.0">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
-    
-    <!-- Preconnect for faster loading -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SightSage — Medicine Scanner</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Hind:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0f2744">
 </head>
 <body>
-    <!-- PREMIUM THEME TOGGLE WITH TOOLTIPS -->
-    <div class="theme-toggle">
-        <button id="highContrastToggle" class="theme-btn" aria-label="Toggle high contrast" title="High Contrast Mode">
-            <i class="fas fa-adjust"></i>
-        </button>
-        <button id="textSizeToggle" class="theme-btn" aria-label="Increase text size" title="Large Text">
-            <i class="fas fa-text-height"></i>
-        </button>
-        <button id="voiceSpeedToggle" class="theme-btn" aria-label="Adjust voice speed" title="Voice Speed">
-            <i class="fas fa-tachometer-alt"></i>
-        </button>
+
+<!-- BACKGROUND CANVAS -->
+<canvas id="bgCanvas" aria-hidden="true"></canvas>
+
+<!-- FLOATING MEDICAL CROSS PARTICLES -->
+<div class="particle-layer" aria-hidden="true">
+    <span class="particle p1">✚</span>
+    <span class="particle p2">✚</span>
+    <span class="particle p3">○</span>
+    <span class="particle p4">✚</span>
+    <span class="particle p5">○</span>
+    <span class="particle p6">✚</span>
+    <span class="particle p7">○</span>
+    <span class="particle p8">✚</span>
+</div>
+
+<!-- DECORATIVE RANGOLI CORNERS (subtle, medical tones) -->
+<div class="deco-layer" aria-hidden="true">
+    <!-- Top left: caduceus-inspired circle motif -->
+    <svg class="deco deco-tl" viewBox="0 0 180 180">
+        <g transform="translate(0,0)" opacity="0.18">
+            <circle cx="0" cy="0" r="160" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="6 8"/>
+            <circle cx="0" cy="0" r="120" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 6"/>
+            <circle cx="0" cy="0" r="80" fill="none" stroke="currentColor" stroke-width="1"/>
+            <!-- Petal ring -->
+            <ellipse rx="8" ry="20" fill="currentColor" fill-opacity="0.4" transform="rotate(0) translate(0,-55)"/>
+            <ellipse rx="8" ry="20" fill="currentColor" fill-opacity="0.4" transform="rotate(45) translate(0,-55)"/>
+            <ellipse rx="8" ry="20" fill="currentColor" fill-opacity="0.4" transform="rotate(90) translate(0,-55)"/>
+            <ellipse rx="8" ry="20" fill="currentColor" fill-opacity="0.4" transform="rotate(135) translate(0,-55)"/>
+            <ellipse rx="8" ry="20" fill="currentColor" fill-opacity="0.4" transform="rotate(180) translate(0,-55)"/>
+            <ellipse rx="8" ry="20" fill="currentColor" fill-opacity="0.4" transform="rotate(225) translate(0,-55)"/>
+            <ellipse rx="8" ry="20" fill="currentColor" fill-opacity="0.4" transform="rotate(270) translate(0,-55)"/>
+            <ellipse rx="8" ry="20" fill="currentColor" fill-opacity="0.4" transform="rotate(315) translate(0,-55)"/>
+        </g>
+    </svg>
+
+    <!-- Bottom right: matching motif -->
+    <svg class="deco deco-br" viewBox="0 0 180 180">
+        <g transform="translate(180,180)" opacity="0.14">
+            <circle cx="0" cy="0" r="160" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="5 9"/>
+            <circle cx="0" cy="0" r="115" fill="none" stroke="currentColor" stroke-width="1.2"/>
+            <circle cx="0" cy="0" r="72" fill="none" stroke="currentColor" stroke-width="1"/>
+            <ellipse rx="7" ry="18" fill="currentColor" fill-opacity="0.35" transform="rotate(0) translate(0,-48)"/>
+            <ellipse rx="7" ry="18" fill="currentColor" fill-opacity="0.35" transform="rotate(60) translate(0,-48)"/>
+            <ellipse rx="7" ry="18" fill="currentColor" fill-opacity="0.35" transform="rotate(120) translate(0,-48)"/>
+            <ellipse rx="7" ry="18" fill="currentColor" fill-opacity="0.35" transform="rotate(180) translate(0,-48)"/>
+            <ellipse rx="7" ry="18" fill="currentColor" fill-opacity="0.35" transform="rotate(240) translate(0,-48)"/>
+            <ellipse rx="7" ry="18" fill="currentColor" fill-opacity="0.35" transform="rotate(300) translate(0,-48)"/>
+        </g>
+    </svg>
+
+    <!-- Side border lines -->
+    <div class="border-left">
+        <div class="bl-dot" style="top:10%"></div>
+        <div class="bl-dot" style="top:25%"></div>
+        <div class="bl-dot" style="top:40%"></div>
+        <div class="bl-dot" style="top:55%"></div>
+        <div class="bl-dot" style="top:70%"></div>
+        <div class="bl-dot" style="top:85%"></div>
     </div>
+    <div class="border-right">
+        <div class="br-dot" style="top:15%"></div>
+        <div class="br-dot" style="top:30%"></div>
+        <div class="br-dot" style="top:45%"></div>
+        <div class="br-dot" style="top:60%"></div>
+        <div class="br-dot" style="top:75%"></div>
+        <div class="br-dot" style="top:90%"></div>
+    </div>
+</div>
 
-    <!-- MAIN APP CONTAINER -->
-    <div class="app-container">
-        <!-- STUNNING HEADER WITH ANIMATED GRADIENT -->
-        <header class="glass-card header-glass">
-            <div class="header-content">
-                <h1 class="gradient-text animate-gradient">SightSage</h1>
-                <p class="subtitle">Point. Ask. Know. <span class="badge">BETA</span></p>
-            </div>
-            <div class="header-decoration">
-                <div class="circle circle-1"></div>
-                <div class="circle circle-2"></div>
-                <div class="circle circle-3"></div>
-            </div>
-        </header>
+<!-- ACCESSIBILITY BAR -->
+<div class="a11y-bar" role="toolbar" aria-label="Accessibility options">
+    <button id="highContrastToggle" class="a11y-btn" title="High Contrast">◐</button>
+    <button id="textSizeToggle" class="a11y-btn" title="Larger Text">A+</button>
+    <button id="voiceSpeedToggle" class="a11y-btn" title="Voice Speed">♪</button>
+</div>
 
-        <!-- VOICE SECTION WITH GLASSMORPHISM -->
-        <section class="voice-section glass-card">
-            <div class="voice-status" id="voiceStatus">
-                <div class="status-icon">
-                    <i class="fas fa-microphone-alt pulse-animation"></i>
+<!-- PAGE -->
+<div class="page">
+
+    <!-- ═══ HEADER ═══ -->
+    <header class="site-header">
+        <div class="header-inner">
+
+            <!-- Logo area -->
+            <div class="logo-area">
+                <div class="logo-badge">
+                    <div class="logo-ring"></div>
+                    <div class="logo-cross">✚</div>
                 </div>
-                <div class="status-text">Initializing premium features...</div>
-            </div>
-            
-            <div class="voice-controls">
-                <button id="voiceButton" class="btn btn-primary btn-icon">
-                    <i class="fas fa-microphone-alt"></i>
-                    <span>Voice Mode</span>
-                </button>
-                <button id="textInputButton" class="btn btn-secondary btn-icon">
-                    <i class="fas fa-keyboard"></i>
-                    <span>Type</span>
-                </button>
+                <div class="logo-text">
+                    <span class="logo-name">SightSage</span>
+                    <span class="logo-tagline">Medicine Safety Assistant</span>
+                </div>
+                <div class="logo-version">v2.0</div>
             </div>
 
-            <!-- Text Input Area with Animation -->
-            <div id="textInputArea" class="text-input-area hidden">
-                <div class="input-group">
-                    <input type="text" id="textQuestion" placeholder="Type your question... (e.g., 'what is this medicine?')">
-                    <button id="submitText" class="btn btn-primary btn-icon">
-                        <i class="fas fa-paper-plane"></i>
-                        <span>Ask</span>
+            <!-- Status strip -->
+            <div class="status-strip" id="voiceStatus" role="status" aria-live="polite">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span class="status-msg">Ready — tap <strong>Scan Medicine</strong> to begin</span>
+            </div>
+
+        </div>
+
+        <!-- Hero tagline band -->
+        <div class="hero-band">
+            <div class="hero-band-left">
+                <h1 class="hero-heading">Your Trusted<br><span class="heading-accent">Medicine Companion</span></h1>
+                <p class="hero-desc">Point your camera at any medicine — SightSage reads the label, checks the expiry, and warns you about interactions. Designed for ease, built for safety.</p>
+
+                <div class="hero-btns">
+                    <button id="voiceButton" class="hbtn hbtn-primary">
+                        <span class="hbtn-icon">🎙</span>
+                        <span>Voice Command</span>
                     </button>
-                </div>
-            </div>
-        </section>
-
-        <!-- CAMERA SECTION WITH PREMIUM DESIGN -->
-        <section class="camera-section glass-card">
-            <div class="camera-container">
-                <video id="camera" autoplay playsinline></video>
-                <canvas id="captureCanvas" style="display: none;"></canvas>
-                
-                <!-- Camera Overlay with Grid -->
-                <div class="camera-overlay">
-                    <div class="scanning-line"></div>
-                    <div class="grid-overlay"></div>
-                </div>
-                
-                <!-- Camera Status Badge -->
-                <div class="camera-badge" id="cameraBadge">
-                    <i class="fas fa-camera"></i>
-                    <span>Camera Ready</span>
-                </div>
-            </div>
-
-            <div class="camera-controls">
-                <button id="scanButton" class="btn btn-primary btn-icon btn-large">
-                    <i class="fas fa-camera"></i>
-                    <span>Scan Medicine</span>
-                </button>
-                <button id="compareButton" class="btn btn-secondary btn-icon">
-                    <i class="fas fa-balance-scale"></i>
-                    <span>Compare</span>
-                </button>
-                <button id="sosButton" class="btn btn-sos btn-icon">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span>SOS</span>
-                </button>
-            </div>
-        </section>
-
-        <!-- RESULTS CARD WITH PREMIUM DESIGN -->
-        <section id="results" class="results-card glass-card hidden">
-            <div class="results-header">
-                <h3><i class="fas fa-flask"></i> Scan Results</h3>
-                <span class="badge success">AI Analyzed</span>
-            </div>
-            <div id="scanResults" class="results-content"></div>
-            <button id="readAloudButton" class="btn btn-secondary btn-icon btn-full">
-                <i class="fas fa-volume-up"></i>
-                <span>Read Aloud</span>
-            </button>
-        </section>
-
-        <!-- COMPARISON MODE WITH MODERN DESIGN -->
-        <section id="comparisonMode" class="comparison-section glass-card hidden">
-            <h3 class="section-title"><i class="fas fa-balance-scale"></i> Compare Medicines</h3>
-            
-            <div class="comparison-container">
-                <div class="medicine-slot" id="slot1">
-                    <div class="slot-header">
-                        <i class="fas fa-pill"></i>
-                        <p id="medicine1Name">Medicine 1</p>
-                    </div>
-                    <button id="captureForCompare1" class="btn btn-small btn-icon">
-                        <i class="fas fa-camera"></i>
-                        <span>Scan First</span>
+                    <button id="textInputButton" class="hbtn hbtn-ghost">
+                        <span class="hbtn-icon">⌨</span>
+                        <span>Type Question</span>
                     </button>
                     <div class="slot-decoration"></div>
                 </div>
 
-                <div class="vs-badge">
-                    <span>VS</span>
-                </div>
-
-                <div class="medicine-slot" id="slot2">
-                    <div class="slot-header">
-                        <i class="fas fa-pill"></i>
-                        <p id="medicine2Name">Medicine 2</p>
-                    </div>
-                    <button id="captureForCompare2" class="btn btn-small btn-icon">
-                        <i class="fas fa-camera"></i>
-                        <span>Scan Second</span>
-                    </button>
-                    <div class="slot-decoration"></div>
+                <div id="textInputArea" class="text-panel hidden">
+                    <input id="textQuestion" type="text" class="text-field" placeholder="e.g. Can I take this with my blood pressure medicine?">
+                    <button id="submitText" class="text-submit">Ask →</button>
                 </div>
             </div>
 
-            <button id="performComparison" class="btn btn-primary btn-icon btn-full">
-                <i class="fas fa-exchange-alt"></i>
-                <span>Compare Now</span>
-            </button>
-
-            <div id="comparisonResults" class="comparison-results"></div>
-        </section>
-
-        <!-- EMERGENCY OVERLAY WITH DRAMATIC DESIGN -->
-        <div id="emergencyOverlay" class="emergency-overlay hidden">
-            <div class="emergency-content glass-card">
-                <div class="emergency-icon">
-                    <i class="fas fa-exclamation-triangle pulse-emergency"></i>
-                </div>
-                <h2>🚨 EMERGENCY ALERT 🚨</h2>
-                <div id="emergencyDetails" class="emergency-details"></div>
-                <div class="emergency-actions">
-                    <button id="dismissEmergency" class="btn btn-primary btn-icon">
-                        <i class="fas fa-check"></i>
-                        <span>I Understand</span>
-                    </button>
-                    <button class="btn btn-secondary btn-icon" onclick="window.location.href='tel:911'">
-                        <i class="fas fa-phone-alt"></i>
-                        <span>Call Emergency</span>
-                    </button>
+            <div class="hero-band-right">
+                <!-- Illustrated "trust" emblem -->
+                <div class="trust-emblem">
+                    <div class="te-outer-ring"></div>
+                    <div class="te-mid-ring"></div>
+                    <div class="te-inner"></div>
+                    <div class="te-pulse"></div>
+                    <!-- Orbiting medicine icons -->
+                    <div class="te-orbit">
+                        <span class="to-item ti1">💊</span>
+                        <span class="to-item ti2">🩺</span>
+                        <span class="to-item ti3">🧬</span>
+                        <span class="to-item ti4">💉</span>
+                    </div>
+                    <div class="te-center">
+                        <span class="te-icon">👁</span>
+                        <span class="te-label">Safe</span>
+                    </div>
+                    <!-- Rangoli dots -->
+                    <div class="te-dots">
+                        <span></span><span></span><span></span><span></span>
+                        <span></span><span></span><span></span><span></span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- MEDICINE CABINET WITH GRID DESIGN -->
-        <section class="history-section glass-card">
-            <h3 class="section-title"><i class="fas fa-history"></i> Medicine Cabinet</h3>
-            <div id="medicineCabinet" class="cabinet-grid">
-                <!-- Items will be populated here -->
+        <!-- Stats band -->
+        <div class="stats-band">
+            <div class="stat-item">
+                <span class="stat-icon">📸</span>
+                <span class="stat-label">Instant Scan</span>
+            </div>
+            <div class="stat-sep" aria-hidden="true">◆</div>
+            <div class="stat-item">
+                <span class="stat-icon">🔔</span>
+                <span class="stat-label">Expiry Alerts</span>
+            </div>
+            <div class="stat-sep" aria-hidden="true">◆</div>
+            <div class="stat-item">
+                <span class="stat-icon">⚠️</span>
+                <span class="stat-label">Interaction Check</span>
+            </div>
+            <div class="stat-sep" aria-hidden="true">◆</div>
+            <div class="stat-item">
+                <span class="stat-icon">🔊</span>
+                <span class="stat-label">Voice Readout</span>
+            </div>
+            <div class="stat-sep" aria-hidden="true">◆</div>
+            <div class="stat-item">
+                <span class="stat-icon">🆘</span>
+                <span class="stat-label">SOS Emergency</span>
             </div>
         </section>
 
@@ -225,22 +202,337 @@
             <i class="fas fa-exclamation-circle"></i>
             <span>Triple tap detected! SOS ready</span>
         </div>
+    </header>
 
-        <!-- PROGRESS BAR FOR SCANNING -->
-        <div id="scanProgress" class="progress-bar hidden">
-            <div class="progress-fill"></div>
+    <!-- ═══ DIVIDER ═══ -->
+    <div class="section-divider" aria-hidden="true">
+        <div class="sd-line"></div>
+        <div class="sd-center">
+            <span>○ ◆ ○ ◆ ○ ◆ ○</span>
         </div>
+        <div class="sd-line"></div>
     </div>
 
-    <!-- LOADING OVERLAY -->
-    <div id="loadingOverlay" class="loading-overlay hidden">
-        <div class="spinner">
-            <div class="double-bounce1"></div>
-            <div class="double-bounce2"></div>
-        </div>
-        <p>Analyzing medicine...</p>
-    </div>
+    <!-- ═══ MAIN GRID ═══ -->
+    <main class="main-grid" role="main">
 
-    <script src="app.js"></script>
+        <!-- LEFT COLUMN: CAMERA -->
+        <section class="grid-col col-camera" aria-label="Medicine scanner">
+
+            <div class="col-heading">
+                <div class="ch-icon">📸</div>
+                <div>
+                    <h2 class="ch-title">Scan Medicine</h2>
+                    <p class="ch-sub">Point camera at label or packaging</p>
+                </div>
+            </div>
+
+            <!-- Camera frame -->
+            <div class="cam-frame" id="cameraFrame">
+                <video id="camera" class="cam-video" autoplay playsinline muted aria-label="Camera preview"></video>
+                <canvas id="captureCanvas" style="display:none;" aria-hidden="true"></canvas>
+
+                <!-- Medical cross corners -->
+                <div class="mc-corner mc-tl" aria-hidden="true">
+                    <span class="mcc-bar mcc-h"></span>
+                    <span class="mcc-bar mcc-v"></span>
+                </div>
+                <div class="mc-corner mc-tr" aria-hidden="true">
+                    <span class="mcc-bar mcc-h"></span>
+                    <span class="mcc-bar mcc-v"></span>
+                </div>
+                <div class="mc-corner mc-bl" aria-hidden="true">
+                    <span class="mcc-bar mcc-h"></span>
+                    <span class="mcc-bar mcc-v"></span>
+                </div>
+                <div class="mc-corner mc-br" aria-hidden="true">
+                    <span class="mcc-bar mcc-h"></span>
+                    <span class="mcc-bar mcc-v"></span>
+                </div>
+
+                <!-- Idle state -->
+                <div class="cam-idle" id="cameraIdle" aria-hidden="true">
+                    <div class="ci-ring"></div>
+                    <div class="ci-icon">📷</div>
+                    <p class="ci-text">Position medicine label<br>within the frame</p>
+                </div>
+
+                <!-- Scan beam -->
+                <div class="scan-beam" id="scanBeam"></div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="action-row">
+                <button id="scanButton" class="act-btn act-primary" aria-label="Scan medicine">
+                    <span class="act-icon">📸</span>
+                    <div class="act-text">
+                        <span class="act-main">Scan Medicine</span>
+                        <span class="act-hint">Point &amp; capture</span>
+                    </div>
+                </button>
+                <button id="compareButton" class="act-btn act-secondary" aria-label="Compare medicines">
+                    <span class="act-icon">⚖</span>
+                    <div class="act-text">
+                        <span class="act-main">Compare</span>
+                        <span class="act-hint">Check interactions</span>
+                    </div>
+                </button>
+                <button id="sosButton" class="act-btn act-sos" aria-label="SOS Emergency">
+                    <span class="act-icon">🆘</span>
+                    <div class="act-text">
+                        <span class="act-main">SOS</span>
+                        <span class="act-hint">Emergency info</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Results -->
+            <div id="results" class="results-panel hidden" aria-live="polite">
+                <div class="rp-head">
+                    <div class="rp-title-row">
+                        <span class="rp-icon">📋</span>
+                        <h3>Analysis Results</h3>
+                    </div>
+                    <button id="readAloudButton" class="speak-btn" aria-label="Read results aloud">
+                        🔊 Read Aloud
+                    </button>
+                </div>
+                <div id="scanResults" class="rp-body"></div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN -->
+        <section class="grid-col col-info" aria-label="Information panels">
+
+            <!-- Compare card -->
+            <div id="comparisonMode" class="info-card cmp-card hidden">
+                <div class="ic-head">
+                    <span class="ic-icon">⚖</span>
+                    <div>
+                        <h3>Compare Medicines</h3>
+                        <p class="ic-sub">Check for dangerous interactions</p>
+                    </div>
+                </div>
+                <div class="cmp-grid">
+                    <div class="cmp-slot">
+                        <div class="cmp-num">1</div>
+                        <p id="medicine1Name" class="cmp-name">Medicine A</p>
+                        <button id="captureForCompare1" class="cmp-scan-btn">📸 Scan First</button>
+                    </div>
+                    <div class="cmp-vs">VS</div>
+                    <div class="cmp-slot">
+                        <div class="cmp-num">2</div>
+                        <p id="medicine2Name" class="cmp-name">Medicine B</p>
+                        <button id="captureForCompare2" class="cmp-scan-btn">📸 Scan Second</button>
+                    </div>
+                </div>
+                <button id="performComparison" class="cmp-go-btn">Compare Now →</button>
+                <div id="comparisonResults" class="cmp-results hidden"></div>
+            </div>
+
+            <!-- Medicine Cabinet -->
+            <div class="info-card cabinet-card">
+                <div class="ic-head">
+                    <span class="ic-icon">🗄</span>
+                    <div>
+                        <h3>Medicine Cabinet</h3>
+                        <p class="ic-sub">Your recently scanned medicines</p>
+                    </div>
+                    <span class="cabinet-badge" id="cabinetCount" aria-label="Count">0</span>
+                </div>
+                <div id="medicineCabinet" class="cab-list" aria-live="polite">
+                    <div class="cab-empty">
+                        <div class="ce-graphic" aria-hidden="true">
+                            <div class="ce-ring"></div>
+                            <span class="ce-icon">💊</span>
+                        </div>
+                        <p>No medicines scanned yet.</p>
+                        <p class="ce-hint">Scan a medicine to add it here.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- How to use card -->
+            <div class="info-card howto-card">
+                <div class="ic-head">
+                    <span class="ic-icon">💡</span>
+                    <div>
+                        <h3>How to Use</h3>
+                        <p class="ic-sub">Simple steps for best results</p>
+                    </div>
+                </div>
+                <div class="steps-list">
+                    <div class="step">
+                        <div class="step-num">1</div>
+                        <div class="step-text">Hold medicine <strong>15–20 cm</strong> from camera in good light</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">2</div>
+                        <div class="step-text">Tap <strong>Scan Medicine</strong> and wait for the AI analysis</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">3</div>
+                        <div class="step-text">Tap <strong>Read Aloud</strong> to hear the results spoken clearly</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">4</div>
+                        <div class="step-text">Use <strong>Compare</strong> before taking two medicines together</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-num">5</div>
+                        <div class="step-text">Triple-tap anywhere to activate <strong>SOS emergency mode</strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Safety reminder card -->
+            <div class="info-card safety-card">
+                <div class="ic-head">
+                    <span class="ic-icon">🏥</span>
+                    <div>
+                        <h3>Safety Reminder</h3>
+                    </div>
+                </div>
+                <p class="safety-text">
+                    SightSage provides AI-assisted information to support — not replace — your doctor's advice. Always consult your physician before changing your medication.
+                </p>
+                <div class="safety-icons" aria-hidden="true">
+                    <span>💊</span><span>🩺</span><span>❤️</span><span>🧬</span>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer" aria-hidden="true">
+        <div class="sf-pattern">
+            <span>◆</span><span>○</span><span>◆</span><span>○</span><span>◆</span>
+            <span>○</span><span>◆</span><span>○</span><span>◆</span><span>○</span>
+            <span>◆</span><span>○</span><span>◆</span><span>○</span><span>◆</span>
+            <span>○</span><span>◆</span><span>○</span><span>◆</span><span>○</span>
+        </div>
+    </footer>
+
+</div>
+
+<!-- EMERGENCY OVERLAY -->
+<div id="emergencyOverlay" class="em-overlay hidden" role="alertdialog" aria-modal="true" aria-label="Emergency information">
+    <div class="em-bg-ring" aria-hidden="true"></div>
+    <div class="em-box">
+        <div class="em-head">
+            <span class="em-icon-big">🚨</span>
+            <h2>EMERGENCY INFO</h2>
+        </div>
+        <div id="emergencyDetails" class="em-body"></div>
+        <button id="dismissEmergency" class="em-close">Dismiss</button>
+    </div>
+</div>
+
+<!-- SOS TOAST -->
+<div id="sosWarning" class="sos-toast hidden" role="alert" aria-live="assertive">
+    ⚠️ Triple-tap detected — SOS activating…
+</div>
+
+<!-- FLOATING ACTIONS -->
+<div class="fab-wrap">
+    <button class="fab fab-cmp" onclick="window.app?.toggleComparisonMode()" title="Compare Medicines">⚖</button>
+    <button class="fab fab-sos" onclick="window.app?.handleSOS()" title="SOS Emergency">🆘</button>
+</div>
+
+<script src="app.js"></script>
+
+<!-- ANIMATED BACKGROUND -->
+<script>
+(function(){
+    const cv = document.getElementById('bgCanvas');
+    const ctx = cv.getContext('2d');
+    let W, H, t = 0, rings = [];
+
+    function resize(){
+        W = cv.width  = window.innerWidth;
+        H = cv.height = window.innerHeight;
+        rings = [];
+        // Create a few expanding ring origins — subtle, medical heartbeat feel
+        for(let i=0; i<4; i++){
+            rings.push({
+                x: Math.random()*W,
+                y: Math.random()*H,
+                r: Math.random()*200,
+                maxR: 300 + Math.random()*200,
+                speed: 0.4 + Math.random()*0.4,
+                alpha: 0
+            });
+        }
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // Dot grid
+    let dots = [];
+    function initDots(){
+        dots = [];
+        const sp = 55;
+        for(let x=sp/2; x<W; x+=sp)
+            for(let y=sp/2; y<H; y+=sp)
+                dots.push({x, y, phase: Math.random()*Math.PI*2});
+    }
+    initDots();
+    window.addEventListener('resize', initDots);
+
+    function draw(){
+        ctx.clearRect(0,0,W,H);
+        t += 0.005;
+
+        // Subtle dot grid — like graph paper, medical aesthetic
+        for(const d of dots){
+            const wave = Math.sin(t*0.8 + d.phase + d.x*0.006 + d.y*0.005);
+            const a = 0.04 + (wave+1)*0.03;
+            const r = Math.max(0.3, 1.1 + wave*0.8);
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, r, 0, Math.PI*2);
+            ctx.fillStyle = `rgba(100,160,220,${a})`;
+            ctx.fill();
+        }
+
+        // Horizontal pulse lines — like an ECG/heartbeat visualization
+        for(let i=0; i<3; i++){
+            const y = H * (0.25 + i*0.25);
+            const phase = t*0.6 + i*2.1;
+            ctx.beginPath();
+            for(let x=0; x<=W; x+=4){
+                const wave = Math.sin((x/W)*Math.PI*8 + phase) * 6
+                           + Math.sin((x/W)*Math.PI*20 + phase*1.3) * 2;
+                if(x===0) ctx.moveTo(x, y+wave);
+                else ctx.lineTo(x, y+wave);
+            }
+            ctx.strokeStyle = `rgba(80,140,210,0.055)`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        // Expanding rings (pulse / heartbeat feel)
+        for(const ring of rings){
+            ring.r += ring.speed;
+            ring.alpha = Math.max(0, 0.06 * (1 - ring.r / ring.maxR));
+            if(ring.r > ring.maxR){
+                ring.r = 0;
+                ring.x = Math.random()*W;
+                ring.y = Math.random()*H;
+                ring.maxR = 300 + Math.random()*200;
+            }
+            ctx.beginPath();
+            ctx.arc(ring.x, ring.y, ring.r, 0, Math.PI*2);
+            ctx.strokeStyle = `rgba(80,150,215,${ring.alpha})`;
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+        }
+
+        requestAnimationFrame(draw);
+    }
+    draw();
+})();
+</script>
 </body>
 </html>

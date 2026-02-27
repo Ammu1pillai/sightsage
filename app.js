@@ -1,4 +1,6 @@
 // SightSage - COMPLETE VERSION with camera fixes
+// Add this as the FIRST LINE
+const isVercel = typeof process !== 'undefined' && process.env && process.env.GROQ_API_KEY;
 console.log('🚀 SightSage starting...');
 
 class SightSage {
@@ -6,7 +8,7 @@ class SightSage {
         console.log('Constructor running');
         
         // API Configuration
-        this.API_KEY = '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';
+        this.API_KEY = process.env.GROQ_API_KEY || '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';
         this.API_URL = 'https://api.groq.com/openai/v1/chat/completions';
         this.VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
         this.TEXT_MODEL = 'llama-3.3-70b-versatile';
@@ -293,12 +295,12 @@ class SightSage {
     async analyzeWithGroq(imageData) {
         const base64Image = imageData.split(',')[1];
         
-        const prompt = `You are a medicine identification assistant. Analyze this medicine image and provide:
+        const prompt = `You are a medicine identification assistant for elderly people and blind people to understand about their medicine. Analyze this medicine image and provide:
 1. Medicine name
-2. Expiry date (if visible, format as DD/MM/YYYY)
+2. Expiry date (if visible, format as DD/MM/YYYY)(else ask for the image having expiry date)
 3. Active ingredients
-4. Important warnings
-5. Physical description (color, shape)
+4. Important warnings about what it should be taken with, after food or before food, good for pregnant or old people with cardiac risks
+5. Physical description (color, shape, what it is used for, side effects)
 
 Format clearly with each section on a new line starting with the number.`;
         
