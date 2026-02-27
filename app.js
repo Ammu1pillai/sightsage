@@ -369,14 +369,93 @@ Important: Please write naturally like you're speaking to someone, not as a list
 
     
     parseMedicineInfo(analysis) {
-        // More flexible extraction that works with natural language
         return {
             name: this.extractFieldFlexible(analysis, ['name', 'called']) || 'Unknown',
             expiry: this.extractExpiryDate(analysis) || null,
-            ingredients: '', // We don't need to extract these separately anymore
-            warnings: '',
-            description: ''
+            description: this.extractBriefDescription(analysis) || '', // New field for one-liner
+            // We don't need these anymore for cabinet display
+            ingredients: '', 
+            warnings: ''
         };
+    }
+
+    extractBriefDescription(analysis) {
+        if (!analysis) return '';
+        
+        // Look for what it's used for in the text
+        const patterns = [
+            /used (?:for|to treat|to help|to manage) ([^\.]+)/i,
+            /treats? ([^\.]+)/i,
+            /for (?:treating|managing|helping with) ([^\.]+)/i,
+            /medicine (?:that|which) helps (?:with|to) ([^\.]+)/i,
+            /prescribed (?:for|to treat) ([^\.]+)/i
+        ];
+        
+        for (const pattern of patterns) {
+            const match = analysis.match(pattern);
+            if (match) {
+                let desc = match[1].trim();
+                // Keep it short - max 60 characters
+                if (desc.length > 60) {
+                    desc = desc.substring(0, 57) + '...';
+                }
+                return desc;
+            }
+        }
+        
+        // Fallback: try to extract a short summary from the beginning
+        const sentences = analysis.split(/[.!?]/);
+        for (const sentence of sentences) {
+            if (sentence.toLowerCase().includes('used for') || 
+                sentence.toLowerCase().includes('treats') ||
+                sentence.toLowerCase().includes('helps')) {
+                let short = sentence.trim();
+                if (short.length > 60) {
+                    short = short.substring(0, 57) + '...';
+                }
+                return short;
+            }
+        }
+        
+        return 'Medicine information';
+    }
+
+    // Update saveToHistory to store the description
+    saveToHistory(medicine) {
+        let cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
+        
+        cabinet.unshift({
+            name: medicine.name || 'Unknown',
+            expiry: medicine.expiry || null,
+            description: medicine.description || 'Medicine information', // Store the one-liner
+            scannedAt: new Date().toISOString(),
+            expired: medicine.expiry ? this.isExpired(medicine.expiry) : false
+        });
+        
+        cabinet = cabinet.slice(0, 10);
+        localStorage.setItem('medicineCabinet', JSON.stringify(cabinet));
+        this.displayCabinet();
+    }
+
+    // Update displayCabinet to show name + description
+    displayCabinet() {
+        if (!this.medicineCabinet) return;
+        
+        const cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
+        
+        if (cabinet.length === 0) {
+            this.medicineCabinet.innerHTML = '<p>No medicines saved yet</p>';
+            return;
+        }
+        
+        this.medicineCabinet.innerHTML = cabinet.map(med => `
+            <div class="medicine-item ${med.expired ? 'expired' : ''}">
+                ${med.expired ? '<span class="expired-label">⚠️ EXPIRED</span>' : ''}
+                <strong>${med.name || 'Unknown'}</strong>
+                <div class="medicine-desc">${med.description || 'Medicine information'}</div>
+                ${med.expiry ? `<small>Expires: ${med.expiry}</small>` : ''}
+            </div>
+        `).join('');
     }
     
     extractFieldFlexible(text, keywords) {
