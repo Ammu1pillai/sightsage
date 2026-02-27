@@ -339,6 +339,14 @@ body {
 }
 .hbtn-ghost:hover { background:var(--teal); color:var(--bg); transform:translateY(-3px); }
 
+.medicine-desc {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin: 4px 0;
+    line-height: 1.4;
+    font-style: italic;
+}
+
 /* Text input */
 .text-panel {
     display:flex; gap:10px; margin-top:14px;
@@ -598,13 +606,15 @@ body {
 @keyframes sosPulse { 0%,100%{box-shadow:var(--shadow-red)} 50%{box-shadow:0 8px 32px rgba(239,68,68,0.55)} }
 .act-sos:hover { animation:none; transform:translateY(-3px); }
 
-/* ── RESULTS PANEL ──────────────────────────────────────────── */
+/* ── RESULTS PANEL (NOW ON RIGHT SIDE) ──────────────────────── */
 .results-panel {
     background:var(--card); border-radius:var(--r-xl);
     border:1px solid var(--card-border); border-top:3px solid var(--teal);
     padding:22px; box-shadow:var(--shadow);
     animation:fadeUp 0.4s var(--ease-out);
+    margin-bottom:20px;
 }
+
 .rp-head {
     display:flex; align-items:center; justify-content:space-between;
     margin-bottom:14px;
@@ -699,43 +709,87 @@ body {
     border-left:3px solid var(--teal);
 }
 
-/* Cabinet card */
+/* Cabinet card (UPDATED FOR DROPDOWN) */
 .cabinet-card { border-top:3px solid var(--blue); }
 .cabinet-badge {
     margin-left:auto; background:linear-gradient(135deg,var(--blue),var(--blue-dark));
     color:white; padding:3px 12px; border-radius:var(--r-pill);
     font-size:0.8rem; font-weight:800;
 }
-.cab-list { display:flex; flex-direction:column; gap:10px; }
-.cab-empty {
-    display:flex; flex-direction:column; align-items:center;
-    gap:12px; padding:28px 20px; text-align:center;
-}
-.ce-graphic { position:relative; width:60px; height:60px; display:flex; align-items:center; justify-content:center; }
-.ce-ring {
-    position:absolute; inset:0; border-radius:50%;
-    border:1.5px solid rgba(59,130,246,0.25);
-    animation:breathe 3s ease-in-out infinite;
-}
-.ce-icon { font-size:1.8rem; }
-.cab-empty p { color:var(--text-muted); font-size:0.95rem; }
-.ce-hint { font-size:0.85rem; color:var(--text-muted); }
 
-.medicine-item {
-    background:rgba(0,0,0,0.2); border-radius:var(--r-md);
-    padding:14px 16px; border-left:4px solid var(--blue);
-    position:relative; color:var(--text-dim);
-    transition:transform 0.15s, box-shadow 0.15s;
-    animation:fadeUp 0.35s var(--ease-out);
+/* DROPDOWN STYLES */
+.cabinet-dropdown {
+    width: 100%;
+    margin-bottom: 16px;
 }
-.medicine-item:hover { transform:translateX(4px); box-shadow:var(--shadow); }
-.medicine-item.expired { border-left-color:var(--red); background:rgba(239,68,68,0.08); }
-.expired-label {
-    position:absolute; top:8px; right:12px;
-    background:rgba(239,68,68,0.18); color:#fca5a5;
-    font-size:0.74rem; font-weight:700;
-    padding:2px 10px; border-radius:var(--r-pill);
-    border:1px solid rgba(239,68,68,0.35);
+
+.cabinet-select {
+    width: 100%;
+    padding: 14px 18px;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--text);
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--card-border);
+    border-radius: var(--r-lg);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2360a5fa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 18px center;
+    background-size: 16px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.cabinet-select:hover {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px var(--blue-glow);
+}
+
+.cabinet-select:focus {
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px var(--teal-glow);
+}
+
+.cabinet-select option {
+    background: var(--card2);
+    color: var(--text);
+    padding: 12px;
+    font-size: 0.9rem;
+}
+
+.cabinet-select optgroup {
+    background: var(--surface);
+    color: var(--teal-light);
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+/* Style for expired items */
+.cabinet-select option.expired-option {
+    color: #fca5a5;
+    background: rgba(239,68,68,0.15);
+}
+
+/* Cabinet details (shown when dropdown item selected) */
+.cabinet-details {
+    margin-top: 16px;
+    padding: 16px;
+    background: rgba(0,0,0,0.2);
+    border-radius: var(--r-md);
+    border-left: 3px solid var(--blue);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--text-dim);
+    white-space: pre-line;
+    animation: fadeUp 0.3s var(--ease-out);
+}
+
+/* Hide old cabinet list */
+.cab-list {
+    display: none;
 }
 
 /* How-to card */
