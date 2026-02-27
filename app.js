@@ -887,19 +887,59 @@ Provide a clear, simple answer focusing on safety.`;
             this.sosWarning.classList.remove('hidden');
         }
         
-        let emergencyText = "🚨 EMERGENCY - Current Medicines:\n";
+        // Get current time for timestamp
+        const now = new Date();
+        const timestamp = now.toLocaleString();
         
+        // Build comprehensive emergency report
+        let emergencyText = "🚨 EMERGENCY REPORT\n";
+        emergencyText += `🕐 ${timestamp}\n\n`;
+        
+        // 1. Current medicine (last scanned)
+        emergencyText += "📍 CURRENT MEDICINE:\n";
         if (this.medicines.current) {
-            emergencyText += `Current: ${this.medicines.current.name}\n`;
+            emergencyText += `• ${this.medicines.current.name}\n`;
+            if (this.medicines.current.expiry) {
+                emergencyText += `  Expires: ${this.medicines.current.expiry}\n`;
+            }
+        } else {
+            emergencyText += "• No medicine currently scanned\n";
         }
         
+        // 2. Medicine cabinet history
         const cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
-        cabinet.forEach(med => {
-            emergencyText += `${med.name} (${med.expiry || 'No expiry'})\n`;
-        });
+        emergencyText += `\n📋 MEDICINE HISTORY (last 10):\n`;
+        
+        if (cabinet.length === 0) {
+            emergencyText += "• No medicines in history\n";
+        } else {
+            cabinet.slice(0, 5).forEach((med, i) => { // Show last 5
+                emergencyText += `${i+1}. ${med.name}`;
+                if (med.expiry) emergencyText += ` (Exp: ${med.expiry})`;
+                emergencyText += `\n   Scanned: ${new Date(med.scannedAt).toLocaleDateString()}\n`;
+            });
+        }
+        
+        // 3. Important medical alerts
+        emergencyText += `\n⚠️ ALERTS:\n`;
+        const expiredMeds = cabinet.filter(med => med.expired);
+        if (expiredMeds.length > 0) {
+            emergencyText += `• EXPIRED MEDICINES FOUND:\n`;
+            expiredMeds.forEach(med => {
+                emergencyText += `  - ${med.name} (expired ${med.expiry})\n`;
+            });
+        } else {
+            emergencyText += "• No expired medicines detected\n";
+        }
+        
+        // 4. Emergency instructions
+        emergencyText += `\n📞 EMERGENCY CONTACT:\n`;
+        emergencyText += `• Call emergency services: 108 (India) or 911 (US)\n`;
+        emergencyText += `• Show this screen to the doctor\n`;
+        emergencyText += `• Keep medicine packaging handy\n`;
         
         this.showEmergency(emergencyText);
-        this.speak("SOS activated");
+        this.speak("SOS activated. Emergency information displayed.");
     }
     
     showEmergency(message) {
