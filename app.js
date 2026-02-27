@@ -295,28 +295,14 @@ class SightSage {
     async analyzeWithGroq(imageData) {
         const base64Image = imageData.split(',')[1];
         
-        const prompt = `You are SightSage, a caring and patient medicine assistant for elderly and visually impaired users. Look at this medicine image and provide information in a warm, conversational way.
+        const prompt = `You are a medicine identification assistant for elderly people and blind people to understand about their medicine. Analyze this medicine image and provide:
+1. Medicine name
+2. Expiry date (if visible, format as DD/MM/YYYY)(else ask for the image having expiry date)
+3. Active ingredients
+4. Important warnings about what it should be taken with, after food or before food, good for pregnant or old people with cardiac risks
+5. Physical description (color, shape, what it is used for, side effects)
 
-Please tell me about this medicine including:
-
-1. What's the name of this medicine? (say it clearly)
-
-2. When does it expire? If you can see the expiry date, tell me in simple terms like "This medicine expires on [date]". If you cannot see the expiry date clearly, kindly ask the user to show the part of the packaging where the expiry date is printed.
-
-3. What does it look like? Describe its color, shape, and any markings in simple words.
-
-4. What is this medicine used for? Explain in simple, everyday language.
-
-5. Important safety information:
-    - Should it be taken with food or on an empty stomach?
-    - Common side effects they might experience
-    - Any special warnings for elderly people
-    - If someone has heart problems (cardiac issues), what should they know before taking this?
-    - Any foods, drinks, or other medicines they should avoid while taking this
-
-6. Friendly advice: Give one or two simple tips about taking this medicine safely.
-
-Important: Please write naturally like you're speaking to someone, not as a list with numbers. Use simple words, short sentences, and a warm tone. Avoid medical jargon unless you explain it. If you're not sure about something, be honest about it.`;
+Format clearly with each section on a new line starting with the number.`;
         
         try {
             const response = await fetch(this.API_URL, {
@@ -341,7 +327,7 @@ Important: Please write naturally like you're speaking to someone, not as a list
                             ]
                         }
                     ],
-                    temperature: 0.4, // Slightly higher for more natural language
+                    temperature: 0.3,
                     max_tokens: 1024
                 })
             });
@@ -354,7 +340,6 @@ Important: Please write naturally like you're speaking to someone, not as a list
             const data = await response.json();
             const analysis = data.choices[0].message.content;
             
-            // Still parse for expiry detection even with natural language
             const medicineInfo = this.parseMedicineInfo(analysis);
             this.medicines.current = medicineInfo;
             this.saveToHistory(medicineInfo);
@@ -367,61 +352,33 @@ Important: Please write naturally like you're speaking to someone, not as a list
             
         } catch (error) {
             console.error('API error:', error);
-            return `I'm sorry, I had trouble analyzing the medicine. ${error.message}`;
+            return `Error analyzing image: ${error.message}`;
         }
     }
-
+    
     parseMedicineInfo(analysis) {
-    // More flexible extraction that works with natural language
         return {
-            name: this.extractFieldFlexible(analysis, ['name', 'called']) || 'Unknown',
-            expiry: this.extractExpiryDate(analysis) || null,
-            ingredients: '', // We don't need to extract these separately anymore
-            warnings: '',
-            description: ''
+            name: this.extractField(analysis, 1) || 'Unknown',
+            expiry: this.extractField(analysis, 2) || null,
+            ingredients: this.extractField(analysis, 3) || '',
+            warnings: this.extractField(analysis, 4) || '',
+            description: this.extractField(analysis, 5) || ''
         };
     }
     
-    extractFieldFlexible(text, keywords) {
+    extractField(text, fieldNumber) {
         if (!text) return null;
-        const lowerText = text.toLowerCase();
-        for (const keyword of keywords) {
-            const patterns = [
-                new RegExp(`${keyword}[\\s\\:]+([^\\.]+)`, 'i'),
-                new RegExp(`${keyword}[\\s\\:]+([^\\n]+)`, 'i'),
-                new RegExp(`(?:is|called)\\s+([A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*)`, 'i')
-            ];
-            for (const pattern of patterns) {
-                const match = text.match(pattern);
-                if (match) return match[1].trim();
-            }
-        }
-        return null;
-    }
-
-    extractExpiryDate(text) {
-        if (!text) return null;
-        // Look for dates in various formats
         const patterns = [
-            /expir(?:y|es?)(?:\s+on)?\s*[:\-]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-            /expiration\s+date[:\-]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-            /(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/,
-            /(?:valid|good)\s+(?:until|till)\s+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i
+            new RegExp(`${fieldNumber}\\.?\\s*([^\\n]+)`),
+            new RegExp(`${fieldNumber}[:\\)]\\s*([^\\n]+)`, 'i'),
         ];
-        
         for (const pattern of patterns) {
             const match = text.match(pattern);
-            if (match) {
-                // Standardize to DD/MM/YYYY format
-                let date = match[1];
-                // Convert various separators to /
-                date = date.replace(/[.-]/g, '/');
-                return date;
-            }
+            if (match) return match[1].trim();
         }
         return null;
     }
-        
+    
     stopCamera() {
         if (this.currentStream) {
             this.currentStream.getTracks().forEach(track => track.stop());
