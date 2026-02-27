@@ -3,172 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>SightSage - Voice-First Medicine Scanner</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval'; media-src *; img-src * data:;">
+    
+    <!-- Primary Meta Tags -->
+    <title>SightSage - Premium AI-Powered Medicine Scanner</title>
+    <meta name="title" content="SightSage - AI Medicine Scanner for Visually Impaired">
+    <meta name="description" content=" revolutionary voice-first medicine scanner that helps visually impaired users identify medications, check expiry dates, and get critical warnings using AI.">
+    <meta name="keywords" content="medicine scanner, medication identifier, visually impaired, accessibility, AI healthcare">
+    <meta name="author" content="SightSage">
+    <meta name="theme-color" content="#6366f1">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://sightsage.app">
+    <meta property="og:title" content="SightSage - AI Medicine Scanner">
+    <meta property="og:description" content="Voice-first medicine scanner for the visually impaired">
+    <meta property="og:image" content="https://sightsage.app/og-image.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://sightsage.app">
+    <meta property="twitter:title" content="SightSage - AI Medicine Scanner">
+    <meta property="twitter:description" content="Voice-first medicine scanner for the visually impaired">
+    <meta property="twitter:image" content="https://sightsage.app/twitter-image.jpg">
+
+    <!-- Stylesheets & Fonts -->
+    <link rel="stylesheet" href="styles.css?v=3.0.0">
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    
+    <!-- Preconnect for faster loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- HIGH CONTRAST TOGGLE -->
+    <!-- PREMIUM THEME TOGGLE WITH TOOLTIPS -->
     <div class="theme-toggle">
-        <button id="highContrastToggle" class="theme-btn" aria-label="Toggle high contrast" title="High Contrast Mode">🌓</button>
-        <button id="textSizeToggle" class="theme-btn" aria-label="Increase text size" title="Large Text">Aa+</button>
-        <button id="voiceSpeedToggle" class="theme-btn" aria-label="Adjust voice speed" title="Voice Speed">🐢</button>
+        <button id="highContrastToggle" class="theme-btn" aria-label="Toggle high contrast" title="High Contrast Mode">
+            <i class="fas fa-adjust"></i>
+        </button>
+        <button id="textSizeToggle" class="theme-btn" aria-label="Increase text size" title="Large Text">
+            <i class="fas fa-text-height"></i>
+        </button>
+        <button id="voiceSpeedToggle" class="theme-btn" aria-label="Adjust voice speed" title="Voice Speed">
+            <i class="fas fa-tachometer-alt"></i>
+        </button>
     </div>
 
-    <!-- MAIN APP -->
+    <!-- MAIN APP CONTAINER -->
     <div class="app-container">
-        <!-- HEADER -->
-        <header class="glass-effect">
-            <h1 class="gradient-text">SightSage</h1>
-            <p class="subtitle">Point. Ask. Know.</p>
-            <div class="version-badge">v2.0</div>
+        <!-- STUNNING HEADER WITH ANIMATED GRADIENT -->
+        <header class="glass-card header-glass">
+            <div class="header-content">
+                <h1 class="gradient-text animate-gradient">SightSage</h1>
+                <p class="subtitle">Point. Ask. Know. <span class="badge">BETA</span></p>
+            </div>
+            <div class="header-decoration">
+                <div class="circle circle-1"></div>
+                <div class="circle circle-2"></div>
+                <div class="circle circle-3"></div>
+            </div>
         </header>
 
-        <!-- VOICE STATUS & INPUT -->
-        <div class="voice-section glass-effect">
+        <!-- VOICE SECTION WITH GLASSMORPHISM -->
+        <section class="voice-section glass-card">
             <div class="voice-status" id="voiceStatus">
-                <span class="status-icon">🎤</span>
-                <span class="status-text">Ready - Tap "Scan Medicine" to start</span>
+                <div class="status-icon">
+                    <i class="fas fa-microphone-alt pulse-animation"></i>
+                </div>
+                <div class="status-text">Initializing premium features...</div>
             </div>
+            
             <div class="voice-controls">
                 <button id="voiceButton" class="btn btn-primary btn-icon">
-                    <span class="btn-icon">🎤</span>
-                    <span class="btn-text">Voice Mode</span>
+                    <i class="fas fa-microphone-alt"></i>
+                    <span>Voice Mode</span>
                 </button>
                 <button id="textInputButton" class="btn btn-secondary btn-icon">
-                    <span class="btn-icon">⌨️</span>
-                    <span class="btn-text">Type</span>
+                    <i class="fas fa-keyboard"></i>
+                    <span>Type</span>
                 </button>
             </div>
-            
-            <!-- Text fallback input -->
-            <div id="textInputArea" class="text-input-area hidden">
-                <input type="text" id="textQuestion" class="text-input" 
-                       placeholder="Type your question... (e.g., 'what is this?')">
-                <button id="submitText" class="btn btn-primary btn-small">Ask</button>
-            </div>
-        </div>
 
-        <!-- CAMERA SECTION -->
-        <div class="camera-section glass-effect">
-            <div class="camera-container">
-                <video id="camera" class="camera-preview" autoplay playsinline></video>
-                <canvas id="captureCanvas" style="display: none;"></canvas>
-                <div class="camera-overlay" id="cameraOverlay">
-                    <div class="scanning-line"></div>
-                    <div class="camera-guide">
-                        <span>📸 Position medicine here</span>
-                    </div>
+            <!-- Text Input Area with Animation -->
+            <div id="textInputArea" class="text-input-area hidden">
+                <div class="input-group">
+                    <input type="text" id="textQuestion" placeholder="Type your question... (e.g., 'what is this medicine?')">
+                    <button id="submitText" class="btn btn-primary btn-icon">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Ask</span>
+                    </button>
                 </div>
             </div>
-            
+        </section>
+
+        <!-- CAMERA SECTION WITH PREMIUM DESIGN -->
+        <section class="camera-section glass-card">
+            <div class="camera-container">
+                <video id="camera" autoplay playsinline></video>
+                <canvas id="captureCanvas" style="display: none;"></canvas>
+                
+                <!-- Camera Overlay with Grid -->
+                <div class="camera-overlay">
+                    <div class="scanning-line"></div>
+                    <div class="grid-overlay"></div>
+                </div>
+                
+                <!-- Camera Status Badge -->
+                <div class="camera-badge" id="cameraBadge">
+                    <i class="fas fa-camera"></i>
+                    <span>Camera Ready</span>
+                </div>
+            </div>
+
             <div class="camera-controls">
-                <button id="scanButton" class="btn btn-primary btn-large btn-icon">
-                    <span class="btn-icon">📸</span>
-                    <span class="btn-text">Scan Medicine</span>
+                <button id="scanButton" class="btn btn-primary btn-icon btn-large">
+                    <i class="fas fa-camera"></i>
+                    <span>Scan Medicine</span>
                 </button>
                 <button id="compareButton" class="btn btn-secondary btn-icon">
-                    <span class="btn-icon">🔄</span>
-                    <span class="btn-text">Compare</span>
+                    <i class="fas fa-balance-scale"></i>
+                    <span>Compare</span>
                 </button>
                 <button id="sosButton" class="btn btn-sos btn-icon">
-                    <span class="btn-icon">🆘</span>
-                    <span class="btn-text">SOS</span>
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>SOS</span>
                 </button>
             </div>
-        </div>
+        </section>
 
-        <!-- RESULTS AREA -->
-        <div id="results" class="results-card glass-effect hidden">
+        <!-- RESULTS CARD WITH PREMIUM DESIGN -->
+        <section id="results" class="results-card glass-card hidden">
             <div class="results-header">
-                <h3>📋 Analysis Results</h3>
-                <button id="readAloudButton" class="btn btn-icon btn-small" title="Read Aloud">
-                    <span class="btn-icon">🔊</span>
-                </button>
+                <h3><i class="fas fa-flask"></i> Scan Results</h3>
+                <span class="badge success">AI Analyzed</span>
             </div>
             <div id="scanResults" class="results-content"></div>
-        </div>
+            <button id="readAloudButton" class="btn btn-secondary btn-icon btn-full">
+                <i class="fas fa-volume-up"></i>
+                <span>Read Aloud</span>
+            </button>
+        </section>
 
-        <!-- COMPARISON MODE -->
-        <div id="comparisonMode" class="comparison-section glass-effect hidden">
-            <h3>🔍 Compare Medicines</h3>
+        <!-- COMPARISON MODE WITH MODERN DESIGN -->
+        <section id="comparisonMode" class="comparison-section glass-card hidden">
+            <h3 class="section-title"><i class="fas fa-balance-scale"></i> Compare Medicines</h3>
+            
             <div class="comparison-container">
                 <div class="medicine-slot" id="slot1">
                     <div class="slot-header">
-                        <span class="slot-number">1</span>
-                        <p id="medicine1Name" class="medicine-name">Medicine A</p>
+                        <i class="fas fa-pill"></i>
+                        <p id="medicine1Name">Medicine 1</p>
                     </div>
-                    <button id="captureForCompare1" class="btn btn-secondary btn-small">
-                        <span class="btn-icon">📸</span>
+                    <button id="captureForCompare1" class="btn btn-small btn-icon">
+                        <i class="fas fa-camera"></i>
                         <span>Scan First</span>
                     </button>
+                    <div class="slot-decoration"></div>
                 </div>
-                
-                <div class="compare-divider">
-                    <span class="divider-icon">⚡</span>
+
+                <div class="vs-badge">
+                    <span>VS</span>
                 </div>
-                
+
                 <div class="medicine-slot" id="slot2">
                     <div class="slot-header">
-                        <span class="slot-number">2</span>
-                        <p id="medicine2Name" class="medicine-name">Medicine B</p>
+                        <i class="fas fa-pill"></i>
+                        <p id="medicine2Name">Medicine 2</p>
                     </div>
-                    <button id="captureForCompare2" class="btn btn-secondary btn-small">
-                        <span class="btn-icon">📸</span>
+                    <button id="captureForCompare2" class="btn btn-small btn-icon">
+                        <i class="fas fa-camera"></i>
                         <span>Scan Second</span>
+                    </button>
+                    <div class="slot-decoration"></div>
+                </div>
+            </div>
+
+            <button id="performComparison" class="btn btn-primary btn-icon btn-full">
+                <i class="fas fa-exchange-alt"></i>
+                <span>Compare Now</span>
+            </button>
+
+            <div id="comparisonResults" class="comparison-results"></div>
+        </section>
+
+        <!-- EMERGENCY OVERLAY WITH DRAMATIC DESIGN -->
+        <div id="emergencyOverlay" class="emergency-overlay hidden">
+            <div class="emergency-content glass-card">
+                <div class="emergency-icon">
+                    <i class="fas fa-exclamation-triangle pulse-emergency"></i>
+                </div>
+                <h2>🚨 EMERGENCY ALERT 🚨</h2>
+                <div id="emergencyDetails" class="emergency-details"></div>
+                <div class="emergency-actions">
+                    <button id="dismissEmergency" class="btn btn-primary btn-icon">
+                        <i class="fas fa-check"></i>
+                        <span>I Understand</span>
+                    </button>
+                    <button class="btn btn-secondary btn-icon" onclick="window.location.href='tel:911'">
+                        <i class="fas fa-phone-alt"></i>
+                        <span>Call Emergency</span>
                     </button>
                 </div>
             </div>
-            
-            <button id="performComparison" class="btn btn-primary btn-large compare-btn">
-                <span class="btn-icon">🔄</span>
-                <span>Compare Now</span>
-            </button>
-            
-            <div id="comparisonResults" class="comparison-results hidden"></div>
         </div>
 
-        <!-- EMERGENCY SECTION -->
-        <div id="emergencyOverlay" class="emergency-overlay hidden">
-            <div class="emergency-content glass-effect">
-                <div class="emergency-header">
-                    <span class="emergency-icon">🚨</span>
-                    <h2>EMERGENCY INFO</h2>
-                </div>
-                <div id="emergencyDetails" class="emergency-details"></div>
-                <button id="dismissEmergency" class="btn btn-light btn-large">
-                    <span>Dismiss</span>
-                </button>
+        <!-- MEDICINE CABINET WITH GRID DESIGN -->
+        <section class="history-section glass-card">
+            <h3 class="section-title"><i class="fas fa-history"></i> Medicine Cabinet</h3>
+            <div id="medicineCabinet" class="cabinet-grid">
+                <!-- Items will be populated here -->
             </div>
+        </section>
+
+        <!-- SOS WARNING TOAST -->
+        <div id="sosWarning" class="sos-toast hidden">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Triple tap detected! SOS ready</span>
         </div>
 
-        <!-- HISTORY & MEDICINE CABINET -->
-        <div class="history-section glass-effect">
-            <div class="history-header">
-                <h3>📚 Medicine Cabinet</h3>
-                <span class="history-count" id="cabinetCount">0</span>
-            </div>
-            <div id="medicineCabinet" class="cabinet-grid"></div>
+        <!-- PROGRESS BAR FOR SCANNING -->
+        <div id="scanProgress" class="progress-bar hidden">
+            <div class="progress-fill"></div>
         </div>
+    </div>
 
-        <!-- SOS TRIPLE-TAP DETECTION -->
-        <div id="sosWarning" class="sos-warning hidden">
-            <span class="sos-icon">⚠️</span>
-            <span>Triple-tap detected! SOS ready</span>
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="spinner">
+            <div class="double-bounce1"></div>
+            <div class="double-bounce2"></div>
         </div>
-
-        <!-- QUICK ACTIONS FLOATING MENU -->
-        <div class="quick-actions">
-            <button class="btn btn-floating" onclick="window.app?.toggleComparisonMode()" title="Compare">
-                <span class="btn-icon">🔄</span>
-            </button>
-            <button class="btn btn-floating btn-sos" onclick="window.app?.handleSOS()" title="Emergency">
-                <span class="btn-icon">🆘</span>
-            </button>
-        </div>
+        <p>Analyzing medicine...</p>
     </div>
 
     <script src="app.js"></script>
