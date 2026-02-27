@@ -386,30 +386,37 @@ Important: Please write naturally like you're speaking to someone, not as a list
     extractMedicineName(analysis) {
         if (!analysis) return null;
         
-        // Look for medicine name patterns and extract just the name
-        const patterns = [
-            // "called [Name]" - capture only the name
-            /called\s+([A-Z][a-zA-Z]+(?:[-\s][A-Z][a-zA-Z]+)*)/i,
-            
-            // "name is [Name]" - capture only the name
-            /name(?:\s+is)?\s+([A-Z][a-zA-Z]+(?:[-\s][A-Z][a-zA-Z]+)*)/i,
-            
-            // "This is [Name]" - capture only the name
-            /this\s+(?:is|medicine\s+is)\s+([A-Z][a-zA-Z]+(?:[-\s][A-Z][a-zA-Z]+)*)/i,
-            
-            // "[Name] is used" - capture only the name at start
-            /^([A-Z][a-zA-Z]+(?:[-\s][A-Z][a-zA-Z]+)*)\s+is\s+used/i
-        ];
+        // Look for the first sentence that mentions the product
+        const lines = analysis.split('\n');
+        for (const line of lines) {
+            // Look for patterns like "I see you're looking at a product called 'X'" or similar
+            const match = line.match(/called ["']?([^"'.]+)["']?/i) || 
+                        line.match(/product called ["']?([^"'.]+)["']?/i) ||
+                        line.match(/["']([^"']+)["']/);
+            if (match) {
+                return match[1].trim();
+            }
+        }
         
-        for (const pattern of patterns) {
-            const match = analysis.match(pattern);
-            if (match && match[1]) {
-                let name = match[1].trim();
-                // Clean up any remaining punctuation
-                name = name.replace(/[.,;:]$/, '').trim();
-                if (name.length >= 2 && name.length <= 30) {
-                    return name;
+        // If no quotes/called pattern, try to find a capitalized product name
+        const words = analysis.split(' ');
+        for (let i = 0; i < Math.min(10, words.length); i++) {
+            const word = words[i].replace(/[^A-Za-z&]/g, '');
+            // Look for words with multiple capitals (like "Gentamicin & Betamethasone")
+            if (word.includes('&') || (word.length > 5 && /^[A-Z][a-z]+$/.test(word))) {
+                // Take the next few words as well
+                let name = word;
+                for (let j = 1; j <= 3; j++) {
+                    if (i + j < words.length) {
+                        const next = words[i + j].replace(/[^A-Za-z&]/g, '');
+                        if (next.length > 2) {
+                            name += ' ' + next;
+                        } else {
+                            break;
+                        }
+                    }
                 }
+                return name;
             }
         }
         
@@ -419,59 +426,51 @@ Important: Please write naturally like you're speaking to someone, not as a list
     extractMedicineUse(analysis) {
         if (!analysis) return null;
         
-        // Split into sentences and look for usage description
+        // Split into sentences
         const sentences = analysis.split(/[.!?]/);
+        
         for (const sentence of sentences) {
-            const lowerSentence = sentence.toLowerCase().trim();
+            const lower = sentence.toLowerCase().trim();
             
-            // Look for usage keywords
-            if (lowerSentence.includes('used for') || 
-                lowerSentence.includes('treats') ||
-                lowerSentence.includes('helps with') ||
-                lowerSentence.includes('to treat') ||
-                lowerSentence.includes('for treating')) {
+            // Look for usage description
+            if (lower.includes('used to treat') || 
+                lower.includes('is used for') ||
+                lower.includes('treats') ||
+                lower.includes('for treating')) {
                 
                 let use = sentence.trim();
                 
-                // Extract text AFTER the keywords
-                if (lowerSentence.includes('used for')) {
-                    use = use.split(/used for/i)[1] || use;
-                } else if (lowerSentence.includes('treats')) {
+                // Extract after the keywords
+                if (lower.includes('used to treat')) {
+                    use = use.split(/used to treat/i)[1] || use;
+                } else if (lower.includes('is used for')) {
+                    use = use.split(/is used for/i)[1] || use;
+                } else if (lower.includes('treats')) {
                     use = use.split(/treats/i)[1] || use;
-                } else if (lowerSentence.includes('helps with')) {
-                    use = use.split(/helps with/i)[1] || use;
-                } else if (lowerSentence.includes('to treat')) {
-                    use = use.split(/to treat/i)[1] || use;
-                } else if (lowerSentence.includes('for treating')) {
+                } else if (lower.includes('for treating')) {
                     use = use.split(/for treating/i)[1] || use;
                 }
                 
                 // Clean up
-                use = use.replace(/^[:\s-]+/, '') // Remove leading colons/spaces/dashes
-                        .replace(/[.,;:\s-]+$/, '') // Remove trailing punctuation
+                use = use.replace(/^[:\s]+/, '')
+                        .replace(/[.,;:\s]+$/, '')
                         .trim();
                 
-                // If we got something meaningful, return it
-                if (use && use.length > 3 && use.length < 80) {
-                    // Capitalize first letter
-                    use = use.charAt(0).toUpperCase() + use.slice(1);
-                    return use;
+                if (use && use.length > 5) {
+                    return use.charAt(0).toUpperCase() + use.slice(1);
                 }
             }
         }
         
-        // If no keywords found, try to find any sentence that might describe usage
+        // If no keywords, look for sentences about what it does
         for (const sentence of sentences) {
             const trimmed = sentence.trim();
-            // Look for sentences that are likely describing what it does
-            if (trimmed.length > 10 && trimmed.length < 80 &&
+            if (trimmed.length > 10 && trimmed.length < 100 &&
                 !trimmed.toLowerCase().includes('expir') &&
                 !trimmed.toLowerCase().includes('color') &&
                 !trimmed.toLowerCase().includes('shape') &&
                 !trimmed.toLowerCase().includes('side effect')) {
-                
-                // Take first sentence that's not about expiry/appearance
-                return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+                return trimmed;
             }
         }
         
