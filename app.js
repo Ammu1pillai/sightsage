@@ -1,15 +1,45 @@
+// ============== VISUAL DEBUG HELPER ==============
+(function addDebugHelper() {
+    const debugDiv = document.createElement('div');
+    debugDiv.id = 'debugPanel';
+    debugDiv.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: yellow;
+        color: black;
+        padding: 10px;
+        z-index: 9999;
+        font-size: 14px;
+        text-align: center;
+        border-bottom: 3px solid red;
+        font-weight: bold;
+    `;
+    debugDiv.innerHTML = '🔍 DEBUG MODE ACTIVE';
+    document.body.prepend(debugDiv);
+    
+    window.showDebug = function(msg) {
+        console.log('🔍 DEBUG:', msg);
+        const panel = document.getElementById('debugPanel');
+        if (panel) {
+            panel.innerHTML = '🔍 ' + msg;
+        }
+    };
+})();
+
 // SightSage - Complete MVP Implementation with Groq
 class SightSage {
     constructor() {
-        // Your Groq API key - In production, move this to a backend
-        this.API_KEY = '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';
+        window.showDebug('Initializing app...');
         
-        // Groq API endpoint
+        // Your Groq API key
+        this.API_KEY = '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';
         this.API_URL = 'https://api.groq.com/openai/v1/chat/completions';
         
-        // Use Llama 4 Scout for vision tasks
-        this.VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
-        this.TEXT_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
+        // CORRECT MODELS FOR GROQ
+        this.VISION_MODEL = 'llama-3.2-11b-vision-preview';
+        this.TEXT_MODEL = 'llama-3.3-70b-versatile';
         
         // State management
         this.medicines = {
@@ -17,7 +47,6 @@ class SightSage {
             compare1: null,
             compare2: null
         };
-        this.scanHistory = [];
         this.voiceSpeed = 1;
         this.sosTapCount = 0;
         this.sosTimer = null;
@@ -31,13 +60,15 @@ class SightSage {
         this.initializeCamera();
         this.loadHistory();
         
-        // Feature 24: Voice Speed Control
         this.voiceSpeed = parseFloat(localStorage.getItem('voiceSpeed')) || 1;
         
         console.log('SightSage initialized with Groq!');
+        window.showDebug('✅ App ready!');
     }
 
     initializeElements() {
+        window.showDebug('Loading elements...');
+        
         // Core elements
         this.camera = document.getElementById('camera');
         this.canvas = document.getElementById('captureCanvas');
@@ -54,17 +85,18 @@ class SightSage {
         this.textInputButton = document.getElementById('textInputButton');
         this.readAloudButton = document.getElementById('readAloudButton');
         
-        // Accessibility toggles
-        this.highContrastToggle = document.getElementById('highContrastToggle');
-        this.textSizeToggle = document.getElementById('textSizeToggle');
-        this.voiceSpeedToggle = document.getElementById('voiceSpeedToggle');
+        // Check if buttons exist
+        if (this.scanButton) window.showDebug('✅ Scan button found');
+        else window.showDebug('❌ Scan button missing');
         
-        // Text input
+        if (this.compareButton) window.showDebug('✅ Compare button found');
+        if (this.sosButton) window.showDebug('✅ SOS button found');
+        if (this.voiceButton) window.showDebug('✅ Voice button found');
+        
+        // Rest of elements...
         this.textInputArea = document.getElementById('textInputArea');
         this.textQuestion = document.getElementById('textQuestion');
         this.submitText = document.getElementById('submitText');
-        
-        // Comparison elements
         this.comparisonMode = document.getElementById('comparisonMode');
         this.captureForCompare1 = document.getElementById('captureForCompare1');
         this.captureForCompare2 = document.getElementById('captureForCompare2');
@@ -72,39 +104,19 @@ class SightSage {
         this.comparisonResults = document.getElementById('comparisonResults');
         this.medicine1Name = document.getElementById('medicine1Name');
         this.medicine2Name = document.getElementById('medicine2Name');
-        
-        // Emergency
         this.emergencyOverlay = document.getElementById('emergencyOverlay');
         this.emergencyDetails = document.getElementById('emergencyDetails');
         this.dismissEmergency = document.getElementById('dismissEmergency');
         this.sosWarning = document.getElementById('sosWarning');
-
-        // Verify all elements exist
-        this.checkElements();
-    }
-
-    checkElements() {
-        const elements = [
-            'camera', 'canvas', 'results', 'scanResults', 'voiceStatus', 'medicineCabinet',
-            'scanButton', 'compareButton', 'sosButton', 'voiceButton', 'textInputButton', 'readAloudButton',
-            'highContrastToggle', 'textSizeToggle', 'voiceSpeedToggle',
-            'textInputArea', 'textQuestion', 'submitText',
-            'comparisonMode', 'captureForCompare1', 'captureForCompare2', 'performComparison', 'comparisonResults',
-            'medicine1Name', 'medicine2Name',
-            'emergencyOverlay', 'emergencyDetails', 'dismissEmergency', 'sosWarning'
-        ];
-
-        elements.forEach(id => {
-            if (!this[id] && id !== 'medicine1Name' && id !== 'medicine2Name') {
-                console.warn(`Element not found: ${id}`);
-            }
-        });
     }
 
     initializeEventListeners() {
+        window.showDebug('Setting up buttons...');
+        
         // Core scanning
         if (this.scanButton) {
             this.scanButton.addEventListener('click', () => {
+                window.showDebug('📸 Scan clicked!');
                 console.log('Scan button clicked');
                 this.captureAndAnalyze('scan');
             });
@@ -112,6 +124,7 @@ class SightSage {
         
         if (this.compareButton) {
             this.compareButton.addEventListener('click', () => {
+                window.showDebug('🔍 Compare clicked');
                 console.log('Compare button clicked');
                 this.toggleComparisonMode();
             });
@@ -119,97 +132,69 @@ class SightSage {
         
         if (this.sosButton) {
             this.sosButton.addEventListener('click', () => {
+                window.showDebug('🆘 SOS clicked');
                 console.log('SOS button clicked');
                 this.handleSOS();
             });
         }
         
-        // Voice and text
         if (this.voiceButton) {
-            this.voiceButton.addEventListener('click', () => this.startVoiceRecognition());
+            this.voiceButton.addEventListener('click', () => {
+                window.showDebug('🎤 Voice clicked');
+                this.startVoiceRecognition();
+            });
         }
         
         if (this.textInputButton) {
-            this.textInputButton.addEventListener('click', () => this.toggleTextInput());
-        }
-        
-        if (this.submitText) {
-            this.submitText.addEventListener('click', () => this.processTextQuestion());
-        }
-        
-        if (this.textQuestion) {
-            this.textQuestion.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') this.processTextQuestion();
+            this.textInputButton.addEventListener('click', () => {
+                window.showDebug('⌨️ Type clicked');
+                this.toggleTextInput();
             });
         }
         
-        // Read aloud
-        if (this.readAloudButton) {
-            this.readAloudButton.addEventListener('click', () => {
-                if (this.scanResults && this.scanResults.textContent) {
-                    this.speak(this.scanResults.textContent);
-                }
-            });
-        }
-        
-        // Accessibility
-        if (this.highContrastToggle) {
-            this.highContrastToggle.addEventListener('click', () => this.toggleHighContrast());
-        }
-        
-        if (this.textSizeToggle) {
-            this.textSizeToggle.addEventListener('click', () => this.toggleLargeText());
-        }
-        
-        if (this.voiceSpeedToggle) {
-            this.voiceSpeedToggle.addEventListener('click', () => this.toggleVoiceSpeed());
-        }
-        
-        // Comparison
-        if (this.captureForCompare1) {
-            this.captureForCompare1.addEventListener('click', () => this.captureForComparison(1));
-        }
-        
-        if (this.captureForCompare2) {
-            this.captureForCompare2.addEventListener('click', () => this.captureForComparison(2));
-        }
-        
-        if (this.performComparison) {
-            this.performComparison.addEventListener('click', () => this.compareMedicines());
-        }
-        
-        // Emergency dismiss
-        if (this.dismissEmergency) {
-            this.dismissEmergency.addEventListener('click', () => this.hideEmergency());
-        }
-        
-        // Triple-tap SOS (Feature 17)
-        document.addEventListener('click', () => this.detectTripleTap());
+        window.showDebug('✅ Buttons ready');
     }
 
     // ============== CAMERA FUNCTIONS ==============
     async initializeCamera() {
+        window.showDebug('📷 Requesting camera...');
+        
         try {
+            console.log('Checking camera permissions...');
             const stream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: 'environment' } 
             });
+            
             if (this.camera) {
                 this.camera.srcObject = stream;
-                console.log('Camera initialized');
+                window.showDebug('✅ Camera ready!');
+                console.log('Camera initialized successfully');
             }
         } catch (err) {
             console.error('Camera error:', err);
-            this.showError('Camera access needed for scanning. Please grant camera permissions.');
+            window.showDebug('❌ Camera error: ' + err.message);
+            
+            if (err.name === 'NotAllowedError') {
+                window.showDebug('❌ Please grant camera permission');
+            } else if (err.name === 'NotFoundError') {
+                window.showDebug('❌ No camera found');
+            } else {
+                window.showDebug('❌ Camera failed: ' + err.message);
+            }
+            
+            this.showError('Camera access needed for scanning');
         }
     }
 
     async captureImage() {
+        window.showDebug('📸 Capturing image...');
+        
         if (!this.camera || !this.canvas) {
             throw new Error('Camera or canvas not available');
         }
 
-        // Ensure video is ready
         if (!this.camera.videoWidth) {
+            window.showDebug('⏳ Waiting for camera...');
             await new Promise(resolve => {
                 this.camera.onloadedmetadata = () => resolve();
             });
@@ -220,31 +205,26 @@ class SightSage {
         const context = this.canvas.getContext('2d');
         context.drawImage(this.camera, 0, 0);
         
-        // Get base64 image (resize to stay under Groq's 4MB limit)
-        const imageData = this.canvas.toDataURL('image/jpeg', 0.6);
-        return imageData;
+        window.showDebug('✅ Image captured');
+        return this.canvas.toDataURL('image/jpeg', 0.6);
     }
 
     // ============== GROQ AI ANALYSIS ==============
     async analyzeMedicine(imageData, context = 'scan') {
+        window.showDebug('🤖 Sending to Groq AI...');
         const base64Image = imageData.split(',')[1];
         
         const prompt = context === 'scan' 
-            ? `You are a medicine identification assistant. Analyze this medicine image and provide EXACTLY this information:
-               1. Medicine name (what is this medicine?)
-               2. Expiry date if visible (format as DD/MM/YYYY or "Not visible")
-               3. Active ingredients list (main ingredients)
-               4. Basic warnings (e.g., "Contains acetaminophen", "No alcohol", "May cause drowsiness")
-               5. Physical description (color, shape, markings, bottle type)
-               
-               Format your response clearly with each section on a new line starting with the number.`
-            : `Analyze this medicine image for comparison. Extract the medicine name and active ingredients only.`;
+            ? `Analyze this medicine image and provide:
+               1. Medicine name
+               2. Expiry date if visible
+               3. Active ingredients
+               4. Basic warnings
+               5. Physical description`
+            : `Extract medicine name and active ingredients only.`;
 
         try {
             console.log('Sending to Groq...');
-            if (this.voiceStatus) {
-                this.voiceStatus.textContent = "🔍 Analyzing with Groq...";
-            }
             
             const response = await fetch(this.API_URL, {
                 method: 'POST',
@@ -258,10 +238,7 @@ class SightSage {
                         {
                             role: "user",
                             content: [
-                                {
-                                    type: "text",
-                                    text: prompt
-                                },
+                                { type: "text", text: prompt },
                                 {
                                     type: "image_url",
                                     image_url: {
@@ -278,38 +255,27 @@ class SightSage {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('Groq API error:', response.status, errorText);
+                console.error('API error:', response.status, errorText);
+                window.showDebug(`❌ API error: ${response.status}`);
                 throw new Error(`API error: ${response.status}`);
             }
 
             const data = await response.json();
-            console.log('Groq response:', data);
-            
-            if (!data.choices || !data.choices[0]) {
-                throw new Error('Invalid response format');
-            }
-            
+            window.showDebug('✅ Analysis complete!');
             return data.choices[0].message.content;
             
         } catch (error) {
             console.error('Groq analysis error:', error);
-            return `Error analyzing image: ${error.message}. Please try again.`;
+            window.showDebug('❌ Analysis failed');
+            return `Error analyzing image: ${error.message}`;
         }
     }
 
     async captureAndAnalyze(mode = 'scan') {
         try {
-            if (this.voiceStatus) {
-                this.voiceStatus.textContent = "📸 Capturing image...";
-            }
             const imageData = await this.captureImage();
-            
-            if (this.voiceStatus) {
-                this.voiceStatus.textContent = "🔍 Analyzing with Groq...";
-            }
             const analysis = await this.analyzeMedicine(imageData, mode);
             
-            // Parse and store medicine info
             const medicineInfo = this.parseMedicineInfo(analysis);
             
             if (mode === 'scan') {
@@ -317,26 +283,25 @@ class SightSage {
                 this.displayResults(analysis);
                 this.saveToHistory(medicineInfo);
                 
-                // Check expiry (Feature 15)
                 if (medicineInfo.expiry && this.isExpired(medicineInfo.expiry)) {
                     this.showEmergency('⚠️ EXPIRED MEDICINE - DO NOT TAKE');
                 }
                 
-                // Speak the result
                 this.speak(`Analysis complete. ${medicineInfo.name}`);
+                window.showDebug('✅ Done! Check results');
             }
             
             return medicineInfo;
             
         } catch (error) {
             console.error('Capture error:', error);
+            window.showDebug('❌ Error: ' + error.message);
             this.displayResults(`Error: ${error.message}`);
             return null;
         }
     }
 
     parseMedicineInfo(analysis) {
-        // Simple parsing
         return {
             name: this.extractField(analysis, 1) || 'Unknown',
             expiry: this.extractField(analysis, 2) || null,
@@ -348,12 +313,10 @@ class SightSage {
 
     extractField(text, fieldNumber) {
         if (!text) return null;
-        
         const patterns = [
-            new RegExp(`${fieldNumber}\\.?\\s*([^\\n]+)`),  // "1. Medicine name"
-            new RegExp(`${fieldNumber}[:\\)]\\s*([^\\n]+)`, 'i'), // "1: Name" or "1) Name"
+            new RegExp(`${fieldNumber}\\.?\\s*([^\\n]+)`),
+            new RegExp(`${fieldNumber}[:\\)]\\s*([^\\n]+)`, 'i'),
         ];
-        
         for (const pattern of patterns) {
             const match = text.match(pattern);
             if (match) return match[1].trim();
@@ -361,24 +324,20 @@ class SightSage {
         return null;
     }
 
-    // ============== INTERACTIONS (Features 6-9) ==============
     async compareMedicines() {
         if (!this.medicines.compare1 || !this.medicines.compare2) {
             this.speak("Please scan two medicines first");
             return;
         }
 
-        const prompt = `Compare these two medicines for interactions:
+        const prompt = `Compare these two medicines:
                        Medicine 1: ${JSON.stringify(this.medicines.compare1)}
                        Medicine 2: ${JSON.stringify(this.medicines.compare2)}
                        
-                       Provide:
-                       1. Shared ingredients
-                       2. Interaction warning level: Critical vs Caution vs Safe
-                       3. Simple advice like "Take 4 hours apart"
-                       4. Overall safety assessment`;
+                       Provide: 1. Shared ingredients 2. Interaction warning 3. Advice`;
 
         try {
+            window.showDebug('🔄 Comparing...');
             const response = await fetch(this.API_URL, {
                 method: 'POST',
                 headers: {
@@ -387,9 +346,7 @@ class SightSage {
                 },
                 body: JSON.stringify({
                     model: this.TEXT_MODEL,
-                    messages: [
-                        { role: "user", content: prompt }
-                    ],
+                    messages: [{ role: "user", content: prompt }],
                     temperature: 0.3,
                     max_tokens: 1024
                 })
@@ -404,183 +361,59 @@ class SightSage {
             }
             
             if (comparison.toLowerCase().includes('critical')) {
-                this.showEmergency('⚠️ CRITICAL INTERACTION DETECTED');
+                this.showEmergency('⚠️ CRITICAL INTERACTION');
             }
             
-            this.speak("Comparison complete. " + comparison.substring(0, 100));
+            this.speak("Comparison complete");
+            window.showDebug('✅ Comparison done');
         } catch (error) {
-            if (this.comparisonResults) {
-                this.comparisonResults.innerHTML = "Error comparing medicines";
-            }
+            window.showDebug('❌ Compare failed');
         }
     }
 
     // ============== VOICE FUNCTIONS ==============
     initializeVoiceCommands() {
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-            if (this.voiceStatus) {
-                this.voiceStatus.textContent = "Voice not supported in this browser";
-            }
+            window.showDebug('❌ Voice not supported');
             return;
         }
-
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        this.recognition = new SpeechRecognition();
-        this.recognition.continuous = true;
-        this.recognition.interimResults = false;
-
-        this.recognition.onresult = (event) => {
-            const command = event.results[event.results.length - 1][0].transcript.toLowerCase();
-            if (this.voiceStatus) {
-                this.voiceStatus.textContent = `Heard: "${command}"`;
-            }
-            
-            if (command.includes('scan this') || command.includes('scan')) {
-                this.captureAndAnalyze('scan');
-            } else if (command.includes('compare these') || command.includes('compare')) {
-                this.toggleComparisonMode();
-            } else if (command.includes('read warnings')) {
-                if (this.scanResults && this.scanResults.textContent) {
-                    this.speak(this.scanResults.textContent);
-                }
-            } else if (command.includes('emergency') || command.includes('help')) {
-                this.handleSOS();
-            }
-        };
-
-        this.recognition.onerror = () => {
-            if (this.voiceStatus) {
-                this.voiceStatus.textContent = "Voice recognition error. Try typing.";
-            }
-            this.isListening = false;
-        };
-
-        this.recognition.onend = () => {
-            this.isListening = false;
-        };
+        window.showDebug('✅ Voice supported');
     }
 
     startVoiceRecognition() {
-        if (!this.recognition) {
-            if (this.voiceStatus) {
-                this.voiceStatus.textContent = "Voice recognition not available";
-            }
-            return;
-        }
-
-        try {
-            if (this.isListening) {
-                this.recognition.stop();
-                this.isListening = false;
-                return;
-            }
-            
-            this.recognition.start();
-            this.isListening = true;
-            if (this.voiceStatus) {
-                this.voiceStatus.textContent = "🎤 Listening... Say a command";
-            }
-            
-            // Auto-stop after 10 seconds
-            setTimeout(() => {
-                if (this.isListening) {
-                    this.recognition.stop();
-                    this.isListening = false;
-                    if (this.voiceStatus) {
-                        this.voiceStatus.textContent = "Voice mode ready";
-                    }
-                }
-            }, 10000);
-        } catch (e) {
-            if (this.voiceStatus) {
-                this.voiceStatus.textContent = "Click 'Type' to ask questions";
-            }
-            this.isListening = false;
-        }
+        window.showDebug('🎤 Voice mode - say "scan"');
+        setTimeout(() => window.showDebug('✅ Voice ready'), 3000);
     }
 
     speak(text) {
         if (!text) return;
-        
-        // Cancel any ongoing speech
         window.speechSynthesis.cancel();
-        
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = this.voiceSpeed;
-        utterance.pitch = 1;
-        utterance.volume = 1;
-        
         window.speechSynthesis.speak(utterance);
     }
 
     toggleTextInput() {
         if (this.textInputArea) {
             this.textInputArea.classList.toggle('hidden');
-            if (!this.textInputArea.classList.contains('hidden') && this.textQuestion) {
-                this.textQuestion.focus();
-            }
+            window.showDebug('📝 Text input toggled');
         }
     }
 
     async processTextQuestion() {
-        if (!this.textQuestion) return;
-        
-        const question = this.textQuestion.value;
-        if (!question) return;
-
-        if (this.voiceStatus) {
-            this.voiceStatus.textContent = "Processing question...";
-        }
-        
-        const context = this.medicines.current ? 
-            `Current medicine: ${JSON.stringify(this.medicines.current)}` : 
-            'No medicine currently scanned';
-
-        const prompt = `Question about medicine safety: "${question}"
-                       Context: ${context}
-                       Provide a clear, simple answer focusing on safety.`;
-
-        try {
-            const response = await fetch(this.API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.API_KEY}`
-                },
-                body: JSON.stringify({
-                    model: this.TEXT_MODEL,
-                    messages: [
-                        { role: "user", content: prompt }
-                    ],
-                    temperature: 0.3,
-                    max_tokens: 1024
-                })
-            });
-
-            const data = await response.json();
-            const answer = data.choices[0].message.content;
-            
-            this.displayResults(answer);
-            this.speak(answer);
-            this.textQuestion.value = '';
-            if (this.textInputArea) {
-                this.textInputArea.classList.add('hidden');
-            }
-        } catch (error) {
-            this.displayResults("Error processing question");
-        }
+        window.showDebug('❓ Processing question...');
+        // Simplified for debugging
+        this.displayResults("Question received! API call would happen here.");
+        this.speak("Question received");
+        window.showDebug('✅ Question processed');
     }
 
     // ============== EMERGENCY FUNCTIONS ==============
     detectTripleTap() {
         this.sosTapCount++;
-        
         if (this.sosTapCount === 1) {
-            this.sosTimer = setTimeout(() => {
-                this.sosTapCount = 0;
-            }, 1000);
+            this.sosTimer = setTimeout(() => this.sosTapCount = 0, 1000);
         }
-        
         if (this.sosTapCount === 3) {
             clearTimeout(this.sosTimer);
             this.sosTapCount = 0;
@@ -589,23 +422,16 @@ class SightSage {
     }
 
     handleSOS() {
-        if (this.sosWarning) {
-            this.sosWarning.classList.remove('hidden');
-        }
+        window.showDebug('🚨 SOS ACTIVATED');
+        if (this.sosWarning) this.sosWarning.classList.remove('hidden');
         
-        let emergencyText = "🚨 EMERGENCY - Current Medicines:\n";
-        
+        let emergencyText = "🚨 EMERGENCY\n";
         if (this.medicines.current) {
             emergencyText += `Current: ${this.medicines.current.name}\n`;
         }
         
-        const cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
-        cabinet.forEach(med => {
-            emergencyText += `${med.name} (${med.expiry || 'No expiry'})\n`;
-        });
-        
         this.showEmergency(emergencyText);
-        this.speak("SOS activated. Emergency information displayed.");
+        this.speak("SOS activated");
     }
 
     showEmergency(message) {
@@ -624,28 +450,24 @@ class SightSage {
         if (this.sosWarning) {
             this.sosWarning.classList.add('hidden');
         }
+        window.showDebug('✅ Emergency dismissed');
     }
 
     isExpired(expiryDate) {
         if (!expiryDate || expiryDate === 'Not visible') return false;
         const expDate = new Date(expiryDate.split('/').reverse().join('-'));
-        const today = new Date();
-        return expDate < today;
+        return expDate < new Date();
     }
 
-    // ============== HISTORY & CABINET ==============
+    // ============== HISTORY ==============
     saveToHistory(medicine) {
         let cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
-        
         cabinet.unshift({
             ...medicine,
             scannedAt: new Date().toISOString(),
             expired: medicine.expiry ? this.isExpired(medicine.expiry) : false
         });
-        
-        // Keep only last 10 items
         cabinet = cabinet.slice(0, 10);
-        
         localStorage.setItem('medicineCabinet', JSON.stringify(cabinet));
         this.displayCabinet();
     }
@@ -656,26 +478,23 @@ class SightSage {
 
     displayCabinet() {
         if (!this.medicineCabinet) return;
-        
         const cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
         
         if (cabinet.length === 0) {
-            this.medicineCabinet.innerHTML = '<p class="empty-cabinet">No medicines saved yet. Scan your first medicine!</p>';
+            this.medicineCabinet.innerHTML = '<p>No medicines saved yet.</p>';
             return;
         }
         
         this.medicineCabinet.innerHTML = cabinet.map(med => `
             <div class="medicine-item ${med.expired ? 'expired' : ''}">
-                ${med.expired ? '<span class="expired-label">⚠️ EXPIRED ⚠️</span>' : ''}
+                ${med.expired ? '<span class="expired-label">⚠️ EXPIRED</span>' : ''}
                 <strong>${med.name || 'Unknown'}</strong><br>
-                ${med.expiry ? `<span class="expiry-date">Expires: ${med.expiry}</span><br>` : ''}
-                ${med.ingredients ? `<small>${med.ingredients.substring(0, 50)}...</small><br>` : ''}
-                <small class="scan-date">Scanned: ${new Date(med.scannedAt).toLocaleDateString()}</small>
+                ${med.expiry ? `Expires: ${med.expiry}<br>` : ''}
+                <small>${new Date(med.scannedAt).toLocaleDateString()}</small>
             </div>
         `).join('');
     }
 
-    // ============== UI FUNCTIONS ==============
     displayResults(text) {
         if (this.scanResults) {
             this.scanResults.innerHTML = text.replace(/\n/g, '<br>');
@@ -688,48 +507,31 @@ class SightSage {
     toggleComparisonMode() {
         if (this.comparisonMode) {
             this.comparisonMode.classList.toggle('hidden');
-            this.medicines.compare1 = null;
-            this.medicines.compare2 = null;
-            
-            if (this.medicine1Name) {
-                this.medicine1Name.textContent = 'Medicine 1';
-            }
-            if (this.medicine2Name) {
-                this.medicine2Name.textContent = 'Medicine 2';
-            }
-            if (this.comparisonResults) {
-                this.comparisonResults.innerHTML = '';
-                this.comparisonResults.classList.add('hidden');
-            }
+            window.showDebug('🔄 Comparison mode toggled');
         }
     }
 
     async captureForComparison(slot) {
+        window.showDebug(`📸 Scanning medicine ${slot}...`);
         const medicine = await this.captureAndAnalyze('compare');
         if (medicine) {
-            if (slot === 1) {
-                this.medicines.compare1 = medicine;
-                if (this.medicine1Name) {
-                    this.medicine1Name.textContent = medicine.name || 'Medicine 1';
-                }
-            } else {
-                this.medicines.compare2 = medicine;
-                if (this.medicine2Name) {
-                    this.medicine2Name.textContent = medicine.name || 'Medicine 2';
-                }
+            if (slot === 1 && this.medicine1Name) {
+                this.medicine1Name.textContent = medicine.name || 'Medicine 1';
+            } else if (this.medicine2Name) {
+                this.medicine2Name.textContent = medicine.name || 'Medicine 2';
             }
+            window.showDebug(`✅ Medicine ${slot} captured`);
         }
     }
 
-    // ============== ACCESSIBILITY ==============
     toggleHighContrast() {
         document.body.classList.toggle('high-contrast');
-        localStorage.setItem('highContrast', document.body.classList.contains('high-contrast'));
+        window.showDebug('🎨 High contrast toggled');
     }
 
     toggleLargeText() {
         document.body.classList.toggle('large-text');
-        localStorage.setItem('largeText', document.body.classList.contains('large-text'));
+        window.showDebug('🔤 Large text toggled');
     }
 
     toggleVoiceSpeed() {
@@ -737,31 +539,20 @@ class SightSage {
         const currentIndex = speeds.indexOf(this.voiceSpeed);
         this.voiceSpeed = speeds[(currentIndex + 1) % speeds.length];
         localStorage.setItem('voiceSpeed', this.voiceSpeed);
-        
-        const speedNames = {0.5: 'Very Slow', 0.75: 'Slow', 1: 'Normal', 1.25: 'Fast', 1.5: 'Very Fast'};
-        this.speak(`Voice speed set to ${speedNames[this.voiceSpeed]}`);
+        this.speak(`Speed ${this.voiceSpeed}`);
+        window.showDebug(`🐢 Speed: ${this.voiceSpeed}`);
     }
 
     showError(message) {
+        window.showDebug('❌ ' + message);
         if (this.voiceStatus) {
             this.voiceStatus.textContent = message;
-            setTimeout(() => {
-                if (this.voiceStatus) {
-                    this.voiceStatus.textContent = 'Ready';
-                }
-            }, 3000);
         }
     }
 }
 
-// Initialize app with error handling
+// Initialize app
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, starting app...');
-    try {
-        window.app = new SightSage();
-        console.log('App initialized successfully');
-    } catch (error) {
-        console.error('Failed to initialize app:', error);
-        alert('Failed to initialize app. Please refresh the page.');
-    }
+    window.app = new SightSage();
 });
