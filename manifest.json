@@ -1,0 +1,16 @@
+{
+  "name": "SightSage - Medicine Scanner for Visually Impaired",
+  "short_name": "SightSage",
+  "description": "Voice-first medicine scanner for elderly and visually impaired - just point and ask",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f5f5",
+  "theme_color": "#3498db",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

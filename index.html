@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>SightSage - Voice-First Medicine Scanner</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+    <!-- HIGH CONTRAST TOGGLE (Feature 22) -->
+    <div class="theme-toggle">
+        <button id="highContrastToggle" aria-label="Toggle high contrast" title="High Contrast Mode">🌓</button>
+        <button id="textSizeToggle" aria-label="Increase text size" title="Large Text">Aa+</button>
+        <button id="voiceSpeedToggle" aria-label="Adjust voice speed" title="Voice Speed">🐢</button>
+    </div>
+
+    <!-- MAIN APP -->
+    <div class="app-container">
+        <header>
+            <h1 id="mainTitle">SightSage</h1>
+            <p class="subtitle">Point. Ask. Know.</p>
+        </header>
+
+        <!-- VOICE STATUS & INPUT (Feature 10-14) -->
+        <div class="voice-section">
+            <div class="voice-status" id="voiceStatus">🎤 Listening... Say "Scan this" or "Compare"</div>
+            <div class="voice-controls">
+                <button id="voiceButton" class="primary-button">🎤 Voice Mode</button>
+                <button id="textInputButton" class="secondary-button">⌨️ Type</button>
+            </div>
+            <!-- Text fallback input (Feature 13) -->
+            <div id="textInputArea" class="hidden">
+                <input type="text" id="textQuestion" placeholder="Type your question... (e.g., 'what is this?')">
+                <button id="submitText">Ask</button>
+            </div>
+        </div>
+
+        <!-- CAMERA SECTION (Feature 1-5) -->
+        <div class="camera-section">
+            <video id="camera" autoplay playsinline></video>
+            <canvas id="captureCanvas" style="display: none;"></canvas>
+            <div class="camera-controls">
+                <button id="scanButton" class="primary-button">📸 Scan Medicine</button>
+                <button id="compareButton" class="secondary-button">🔍 Compare Two</button>
+                <button id="sosButton" class="sos-button" id="sosButton">🆘 SOS</button>
+            </div>
+        </div>
+
+        <!-- RESULTS AREA -->
+        <div id="results" class="results-card hidden">
+            <div id="scanResults"></div>
+            <button id="readAloudButton" class="secondary-button">🔊 Read Aloud</button>
+        </div>
+
+        <!-- COMPARISON MODE (Feature 6-9) -->
+        <div id="comparisonMode" class="hidden">
+            <h3>Compare Medicines</h3>
+            <div class="comparison-container">
+                <div class="medicine-slot">
+                    <p id="medicine1Name">Medicine 1</p>
+                    <button id="captureForCompare1" class="small-button">📸 Scan First</button>
+                </div>
+                <div class="medicine-slot">
+                    <p id="medicine2Name">Medicine 2</p>
+                    <button id="captureForCompare2" class="small-button">📸 Scan Second</button>
+                </div>
+            </div>
+            <button id="performComparison" class="primary-button">Compare Now</button>
+            <div id="comparisonResults"></div>
+        </div>
+
+        <!-- EMERGENCY SECTION (Feature 15-18) -->
+        <div id="emergencyOverlay" class="hidden">
+            <div class="emergency-content">
+                <h2>🚨 EMERGENCY INFO 🚨</h2>
+                <div id="emergencyDetails"></div>
+                <button id="dismissEmergency">Dismiss</button>
+            </div>
+        </div>
+
+        <!-- HISTORY & MEDICINE CABINET (Feature 19-21) -->
+        <div class="history-section">
+            <h3>Medicine Cabinet</h3>
+            <div id="medicineCabinet"></div>
+        </div>
+
+        <!-- SOS TRIPLE-TAP DETECTION (Feature 17) -->
+        <div id="sosWarning" class="hidden">⚠️ Triple-tap detected! SOS ready</div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
