@@ -6,87 +6,169 @@
     <title>SightSage - Voice-First Medicine Scanner</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
 </head>
 <body>
-    <!-- HIGH CONTRAST TOGGLE (Feature 22) -->
+    <!-- HIGH CONTRAST TOGGLE -->
     <div class="theme-toggle">
-        <button id="highContrastToggle" aria-label="Toggle high contrast" title="High Contrast Mode">🌓</button>
-        <button id="textSizeToggle" aria-label="Increase text size" title="Large Text">Aa+</button>
-        <button id="voiceSpeedToggle" aria-label="Adjust voice speed" title="Voice Speed">🐢</button>
+        <button id="highContrastToggle" class="theme-btn" aria-label="Toggle high contrast" title="High Contrast Mode">🌓</button>
+        <button id="textSizeToggle" class="theme-btn" aria-label="Increase text size" title="Large Text">Aa+</button>
+        <button id="voiceSpeedToggle" class="theme-btn" aria-label="Adjust voice speed" title="Voice Speed">🐢</button>
     </div>
 
     <!-- MAIN APP -->
     <div class="app-container">
-        <header>
-            <h1 id="mainTitle">SightSage</h1>
+        <!-- HEADER -->
+        <header class="glass-effect">
+            <h1 class="gradient-text">SightSage</h1>
             <p class="subtitle">Point. Ask. Know.</p>
+            <div class="version-badge">v2.0</div>
         </header>
 
-        <!-- VOICE STATUS & INPUT (Feature 10-14) -->
-        <div class="voice-section">
-            <div class="voice-status" id="voiceStatus">🎤 Listening... Say "Scan this" or "Compare"</div>
-            <div class="voice-controls">
-                <button id="voiceButton" class="primary-button">🎤 Voice Mode</button>
-                <button id="textInputButton" class="secondary-button">⌨️ Type</button>
+        <!-- VOICE STATUS & INPUT -->
+        <div class="voice-section glass-effect">
+            <div class="voice-status" id="voiceStatus">
+                <span class="status-icon">🎤</span>
+                <span class="status-text">Ready - Tap "Scan Medicine" to start</span>
             </div>
-            <!-- Text fallback input (Feature 13) -->
-            <div id="textInputArea" class="hidden">
-                <input type="text" id="textQuestion" placeholder="Type your question... (e.g., 'what is this?')">
-                <button id="submitText">Ask</button>
+            <div class="voice-controls">
+                <button id="voiceButton" class="btn btn-primary btn-icon">
+                    <span class="btn-icon">🎤</span>
+                    <span class="btn-text">Voice Mode</span>
+                </button>
+                <button id="textInputButton" class="btn btn-secondary btn-icon">
+                    <span class="btn-icon">⌨️</span>
+                    <span class="btn-text">Type</span>
+                </button>
+            </div>
+            
+            <!-- Text fallback input -->
+            <div id="textInputArea" class="text-input-area hidden">
+                <input type="text" id="textQuestion" class="text-input" 
+                       placeholder="Type your question... (e.g., 'what is this?')">
+                <button id="submitText" class="btn btn-primary btn-small">Ask</button>
             </div>
         </div>
 
-        <!-- CAMERA SECTION (Feature 1-5) -->
-        <div class="camera-section">
-            <video id="camera" autoplay playsinline></video>
-            <canvas id="captureCanvas" style="display: none;"></canvas>
+        <!-- CAMERA SECTION -->
+        <div class="camera-section glass-effect">
+            <div class="camera-container">
+                <video id="camera" class="camera-preview" autoplay playsinline></video>
+                <canvas id="captureCanvas" style="display: none;"></canvas>
+                <div class="camera-overlay" id="cameraOverlay">
+                    <div class="scanning-line"></div>
+                    <div class="camera-guide">
+                        <span>📸 Position medicine here</span>
+                    </div>
+                </div>
+            </div>
+            
             <div class="camera-controls">
-                <button id="scanButton" class="primary-button">📸 Scan Medicine</button>
-                <button id="compareButton" class="secondary-button">🔍 Compare Two</button>
-                <button id="sosButton" class="sos-button">🆘 SOS</button>
+                <button id="scanButton" class="btn btn-primary btn-large btn-icon">
+                    <span class="btn-icon">📸</span>
+                    <span class="btn-text">Scan Medicine</span>
+                </button>
+                <button id="compareButton" class="btn btn-secondary btn-icon">
+                    <span class="btn-icon">🔄</span>
+                    <span class="btn-text">Compare</span>
+                </button>
+                <button id="sosButton" class="btn btn-sos btn-icon">
+                    <span class="btn-icon">🆘</span>
+                    <span class="btn-text">SOS</span>
+                </button>
             </div>
         </div>
 
         <!-- RESULTS AREA -->
-        <div id="results" class="results-card hidden">
-            <div id="scanResults"></div>
-            <button id="readAloudButton" class="secondary-button">🔊 Read Aloud</button>
+        <div id="results" class="results-card glass-effect hidden">
+            <div class="results-header">
+                <h3>📋 Analysis Results</h3>
+                <button id="readAloudButton" class="btn btn-icon btn-small" title="Read Aloud">
+                    <span class="btn-icon">🔊</span>
+                </button>
+            </div>
+            <div id="scanResults" class="results-content"></div>
         </div>
 
-        <!-- COMPARISON MODE (Feature 6-9) -->
-        <div id="comparisonMode" class="hidden">
-            <h3>Compare Medicines</h3>
+        <!-- COMPARISON MODE -->
+        <div id="comparisonMode" class="comparison-section glass-effect hidden">
+            <h3>🔍 Compare Medicines</h3>
             <div class="comparison-container">
-                <div class="medicine-slot">
-                    <p id="medicine1Name">Medicine 1</p>
-                    <button id="captureForCompare1" class="small-button">📸 Scan First</button>
+                <div class="medicine-slot" id="slot1">
+                    <div class="slot-header">
+                        <span class="slot-number">1</span>
+                        <p id="medicine1Name" class="medicine-name">Medicine A</p>
+                    </div>
+                    <button id="captureForCompare1" class="btn btn-secondary btn-small">
+                        <span class="btn-icon">📸</span>
+                        <span>Scan First</span>
+                    </button>
                 </div>
-                <div class="medicine-slot">
-                    <p id="medicine2Name">Medicine 2</p>
-                    <button id="captureForCompare2" class="small-button">📸 Scan Second</button>
+                
+                <div class="compare-divider">
+                    <span class="divider-icon">⚡</span>
+                </div>
+                
+                <div class="medicine-slot" id="slot2">
+                    <div class="slot-header">
+                        <span class="slot-number">2</span>
+                        <p id="medicine2Name" class="medicine-name">Medicine B</p>
+                    </div>
+                    <button id="captureForCompare2" class="btn btn-secondary btn-small">
+                        <span class="btn-icon">📸</span>
+                        <span>Scan Second</span>
+                    </button>
                 </div>
             </div>
-            <button id="performComparison" class="primary-button">Compare Now</button>
-            <div id="comparisonResults"></div>
+            
+            <button id="performComparison" class="btn btn-primary btn-large compare-btn">
+                <span class="btn-icon">🔄</span>
+                <span>Compare Now</span>
+            </button>
+            
+            <div id="comparisonResults" class="comparison-results hidden"></div>
         </div>
 
-        <!-- EMERGENCY SECTION (Feature 15-18) -->
-        <div id="emergencyOverlay" class="hidden">
-            <div class="emergency-content">
-                <h2>🚨 EMERGENCY INFO 🚨</h2>
-                <div id="emergencyDetails"></div>
-                <button id="dismissEmergency">Dismiss</button>
+        <!-- EMERGENCY SECTION -->
+        <div id="emergencyOverlay" class="emergency-overlay hidden">
+            <div class="emergency-content glass-effect">
+                <div class="emergency-header">
+                    <span class="emergency-icon">🚨</span>
+                    <h2>EMERGENCY INFO</h2>
+                </div>
+                <div id="emergencyDetails" class="emergency-details"></div>
+                <button id="dismissEmergency" class="btn btn-light btn-large">
+                    <span>Dismiss</span>
+                </button>
             </div>
         </div>
 
-        <!-- HISTORY & MEDICINE CABINET (Feature 19-21) -->
-        <div class="history-section">
-            <h3>Medicine Cabinet</h3>
-            <div id="medicineCabinet"></div>
+        <!-- HISTORY & MEDICINE CABINET -->
+        <div class="history-section glass-effect">
+            <div class="history-header">
+                <h3>📚 Medicine Cabinet</h3>
+                <span class="history-count" id="cabinetCount">0</span>
+            </div>
+            <div id="medicineCabinet" class="cabinet-grid"></div>
         </div>
 
-        <!-- SOS TRIPLE-TAP DETECTION (Feature 17) -->
-        <div id="sosWarning" class="hidden">⚠️ Triple-tap detected! SOS ready</div>
+        <!-- SOS TRIPLE-TAP DETECTION -->
+        <div id="sosWarning" class="sos-warning hidden">
+            <span class="sos-icon">⚠️</span>
+            <span>Triple-tap detected! SOS ready</span>
+        </div>
+
+        <!-- QUICK ACTIONS FLOATING MENU -->
+        <div class="quick-actions">
+            <button class="btn btn-floating" onclick="window.app?.toggleComparisonMode()" title="Compare">
+                <span class="btn-icon">🔄</span>
+            </button>
+            <button class="btn btn-floating btn-sos" onclick="window.app?.handleSOS()" title="Emergency">
+                <span class="btn-icon">🆘</span>
+            </button>
+        </div>
     </div>
 
     <script src="app.js"></script>

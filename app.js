@@ -1,43 +1,13 @@
-// ============== VISUAL DEBUG HELPER ==============
-(function addDebugHelper() {
-    const debugDiv = document.createElement('div');
-    debugDiv.id = 'debugPanel';
-    debugDiv.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        background: yellow;
-        color: black;
-        padding: 10px;
-        z-index: 9999;
-        font-size: 14px;
-        text-align: center;
-        border-bottom: 3px solid red;
-        font-weight: bold;
-    `;
-    debugDiv.innerHTML = '🔍 DEBUG MODE ACTIVE';
-    document.body.prepend(debugDiv);
-    
-    window.showDebug = function(msg) {
-        console.log('🔍 DEBUG:', msg);
-        const panel = document.getElementById('debugPanel');
-        if (panel) {
-            panel.innerHTML = '🔍 ' + msg;
-        }
-    };
-})();
+// SightSage - COMPLETE VERSION with camera fixes
+console.log('🚀 SightSage starting...');
 
-// SightSage - Complete MVP Implementation with Groq
 class SightSage {
     constructor() {
-        window.showDebug('Initializing app...');
+        console.log('Constructor running');
         
-        // Your Groq API key
+        // API Configuration
         this.API_KEY = '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';
         this.API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-        
-        // CORRECT MODELS FOR GROQ
         this.VISION_MODEL = 'llama-3.2-11b-vision-preview';
         this.TEXT_MODEL = 'llama-3.3-70b-versatile';
         
@@ -52,24 +22,22 @@ class SightSage {
         this.sosTimer = null;
         this.recognition = null;
         this.isListening = false;
+        this.currentStream = null;
         
-        // DOM Elements
-        this.initializeElements();
-        this.initializeEventListeners();
+        // Get all elements
+        this.getAllElements();
+        
+        // Initialize everything
+        this.setupEventListeners();
         this.initializeVoiceCommands();
-        this.initializeCamera();
         this.loadHistory();
+        this.setupAccessibility();
         
-        this.voiceSpeed = parseFloat(localStorage.getItem('voiceSpeed')) || 1;
-        
-        console.log('SightSage initialized with Groq!');
-        window.showDebug('✅ App ready!');
+        this.updateStatus('📱 Ready - Tap "Scan Medicine" to start');
+        console.log('✅ App fully initialized');
     }
-
-    initializeElements() {
-        window.showDebug('Loading elements...');
-        
-        // Core elements
+    
+    getAllElements() {
         this.camera = document.getElementById('camera');
         this.canvas = document.getElementById('captureCanvas');
         this.results = document.getElementById('results');
@@ -77,26 +45,21 @@ class SightSage {
         this.voiceStatus = document.getElementById('voiceStatus');
         this.medicineCabinet = document.getElementById('medicineCabinet');
         
-        // Buttons
-        this.scanButton = document.getElementById('scanButton');
-        this.compareButton = document.getElementById('compareButton');
-        this.sosButton = document.getElementById('sosButton');
-        this.voiceButton = document.getElementById('voiceButton');
-        this.textInputButton = document.getElementById('textInputButton');
-        this.readAloudButton = document.getElementById('readAloudButton');
+        this.scanBtn = document.getElementById('scanButton');
+        this.compareBtn = document.getElementById('compareButton');
+        this.sosBtn = document.getElementById('sosButton');
+        this.voiceBtn = document.getElementById('voiceButton');
+        this.textInputBtn = document.getElementById('textInputButton');
+        this.readAloudBtn = document.getElementById('readAloudButton');
         
-        // Check if buttons exist
-        if (this.scanButton) window.showDebug('✅ Scan button found');
-        else window.showDebug('❌ Scan button missing');
+        this.highContrastToggle = document.getElementById('highContrastToggle');
+        this.textSizeToggle = document.getElementById('textSizeToggle');
+        this.voiceSpeedToggle = document.getElementById('voiceSpeedToggle');
         
-        if (this.compareButton) window.showDebug('✅ Compare button found');
-        if (this.sosButton) window.showDebug('✅ SOS button found');
-        if (this.voiceButton) window.showDebug('✅ Voice button found');
-        
-        // Rest of elements...
         this.textInputArea = document.getElementById('textInputArea');
         this.textQuestion = document.getElementById('textQuestion');
         this.submitText = document.getElementById('submitText');
+        
         this.comparisonMode = document.getElementById('comparisonMode');
         this.captureForCompare1 = document.getElementById('captureForCompare1');
         this.captureForCompare2 = document.getElementById('captureForCompare2');
@@ -104,128 +67,242 @@ class SightSage {
         this.comparisonResults = document.getElementById('comparisonResults');
         this.medicine1Name = document.getElementById('medicine1Name');
         this.medicine2Name = document.getElementById('medicine2Name');
+        
         this.emergencyOverlay = document.getElementById('emergencyOverlay');
         this.emergencyDetails = document.getElementById('emergencyDetails');
         this.dismissEmergency = document.getElementById('dismissEmergency');
         this.sosWarning = document.getElementById('sosWarning');
-    }
-
-    initializeEventListeners() {
-        window.showDebug('Setting up buttons...');
         
-        // Core scanning
-        if (this.scanButton) {
-            this.scanButton.addEventListener('click', () => {
-                window.showDebug('📸 Scan clicked!');
-                console.log('Scan button clicked');
-                this.captureAndAnalyze('scan');
-            });
+        console.log('Elements loaded');
+    }
+    
+    setupEventListeners() {
+        if (this.scanBtn) {
+            this.scanBtn.onclick = () => {
+                console.log('📸 Scan clicked');
+                this.startCameraAndScan();
+            };
         }
         
-        if (this.compareButton) {
-            this.compareButton.addEventListener('click', () => {
-                window.showDebug('🔍 Compare clicked');
-                console.log('Compare button clicked');
+        if (this.compareBtn) {
+            this.compareBtn.onclick = () => {
+                console.log('🔄 Compare clicked');
                 this.toggleComparisonMode();
-            });
+            };
         }
         
-        if (this.sosButton) {
-            this.sosButton.addEventListener('click', () => {
-                window.showDebug('🆘 SOS clicked');
-                console.log('SOS button clicked');
+        if (this.sosBtn) {
+            this.sosBtn.onclick = () => {
+                console.log('🆘 SOS clicked');
                 this.handleSOS();
-            });
+            };
         }
         
-        if (this.voiceButton) {
-            this.voiceButton.addEventListener('click', () => {
-                window.showDebug('🎤 Voice clicked');
+        if (this.voiceBtn) {
+            this.voiceBtn.onclick = () => {
+                console.log('🎤 Voice clicked');
                 this.startVoiceRecognition();
-            });
+            };
         }
         
-        if (this.textInputButton) {
-            this.textInputButton.addEventListener('click', () => {
-                window.showDebug('⌨️ Type clicked');
+        if (this.textInputBtn) {
+            this.textInputBtn.onclick = () => {
+                console.log('⌨️ Text clicked');
                 this.toggleTextInput();
-            });
+            };
         }
         
-        window.showDebug('✅ Buttons ready');
+        if (this.submitText) {
+            this.submitText.onclick = () => {
+                this.processTextQuestion();
+            };
+        }
+        
+        if (this.readAloudBtn) {
+            this.readAloudBtn.onclick = () => {
+                if (this.scanResults && this.scanResults.textContent) {
+                    this.speak(this.scanResults.textContent);
+                }
+            };
+        }
+        
+        if (this.textQuestion) {
+            this.textQuestion.onkeypress = (e) => {
+                if (e.key === 'Enter') this.processTextQuestion();
+            };
+        }
+        
+        if (this.captureForCompare1) {
+            this.captureForCompare1.onclick = () => this.captureForComparison(1);
+        }
+        if (this.captureForCompare2) {
+            this.captureForCompare2.onclick = () => this.captureForComparison(2);
+        }
+        if (this.performComparison) {
+            this.performComparison.onclick = () => this.compareMedicines();
+        }
+        
+        if (this.dismissEmergency) {
+            this.dismissEmergency.onclick = () => this.hideEmergency();
+        }
+        
+        document.addEventListener('click', () => this.detectTripleTap());
     }
-
+    
+    setupAccessibility() {
+        if (this.highContrastToggle) {
+            this.highContrastToggle.onclick = () => {
+                document.body.classList.toggle('high-contrast');
+                localStorage.setItem('highContrast', document.body.classList.contains('high-contrast'));
+            };
+        }
+        
+        if (this.textSizeToggle) {
+            this.textSizeToggle.onclick = () => {
+                document.body.classList.toggle('large-text');
+                localStorage.setItem('largeText', document.body.classList.contains('large-text'));
+            };
+        }
+        
+        if (this.voiceSpeedToggle) {
+            this.voiceSpeedToggle.onclick = () => {
+                const speeds = [0.5, 0.75, 1, 1.25, 1.5];
+                const currentIndex = speeds.indexOf(this.voiceSpeed);
+                this.voiceSpeed = speeds[(currentIndex + 1) % speeds.length];
+                localStorage.setItem('voiceSpeed', this.voiceSpeed);
+                this.speak(`Speed ${this.voiceSpeed}`);
+            };
+        }
+    }
+    
     // ============== CAMERA FUNCTIONS ==============
-    async initializeCamera() {
-        window.showDebug('📷 Requesting camera...');
+
+    async startCameraAndScan() {
+        this.updateStatus('📷 Requesting camera...');
         
         try {
-            console.log('Checking camera permissions...');
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: 'environment' } 
-            });
+            // Stop any existing stream first
+            this.stopCamera();
             
-            if (this.camera) {
-                this.camera.srcObject = stream;
-                window.showDebug('✅ Camera ready!');
-                console.log('Camera initialized successfully');
+            const constraints = {
+                video: {
+                    facingMode: { ideal: 'environment' },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            };
+
+            let stream;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+            } catch (constraintErr) {
+                console.warn('Falling back to basic video constraints:', constraintErr);
+                // Fallback: try with just video: true
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
             }
+
+            this.currentStream = stream;
+
+            // FIX: always make video element visible before assigning srcObject
+            this.camera.style.display = 'block';
+            this.camera.srcObject = stream;
+
+            // FIX: wait for the video to be ready with actual dimensions
+            await this.waitForVideoReady(this.camera);
+
+            this.updateStatus('✅ Camera ready! Analyzing...');
+            await this.captureAndAnalyze();
+
         } catch (err) {
             console.error('Camera error:', err);
-            window.showDebug('❌ Camera error: ' + err.message);
-            
-            if (err.name === 'NotAllowedError') {
-                window.showDebug('❌ Please grant camera permission');
-            } else if (err.name === 'NotFoundError') {
-                window.showDebug('❌ No camera found');
-            } else {
-                window.showDebug('❌ Camera failed: ' + err.message);
-            }
-            
-            this.showError('Camera access needed for scanning');
+            this.handleCameraError(err);
         }
     }
 
-    async captureImage() {
-        window.showDebug('📸 Capturing image...');
+    /**
+     * FIX: Waits until the video element has nonzero dimensions and is actually playing.
+     * This prevents capturing a blank frame.
+     */
+    waitForVideoReady(videoEl, timeoutMs = 8000) {
+        return new Promise((resolve, reject) => {
+            const start = Date.now();
+
+            const check = () => {
+                if (videoEl.readyState >= 2 && videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
+                    resolve();
+                    return;
+                }
+                if (Date.now() - start > timeoutMs) {
+                    reject(new Error('Camera timed out – no video dimensions after ' + timeoutMs + 'ms'));
+                    return;
+                }
+                requestAnimationFrame(check);
+            };
+
+            // Kick off play() and start polling
+            videoEl.play()
+                .then(() => check())
+                .catch(err => {
+                    // play() can fail on some browsers if autoplay is blocked;
+                    // still try polling in case it starts on its own
+                    console.warn('video.play() rejected:', err);
+                    check();
+                });
+        });
+    }
+    
+    async captureAndAnalyze() {
+        this.updateStatus('📸 Capturing image...');
         
         if (!this.camera || !this.canvas) {
-            throw new Error('Camera or canvas not available');
+            this.updateStatus('❌ Camera or canvas element missing');
+            return;
         }
 
-        if (!this.camera.videoWidth) {
-            window.showDebug('⏳ Waiting for camera...');
-            await new Promise(resolve => {
-                this.camera.onloadedmetadata = () => resolve();
-            });
+        // FIX: double-check dimensions before drawing
+        if (this.camera.videoWidth === 0 || this.camera.videoHeight === 0) {
+            this.updateStatus('❌ Camera frame has no dimensions yet');
+            this.stopCamera();
+            return;
         }
         
         this.canvas.width = this.camera.videoWidth;
         this.canvas.height = this.camera.videoHeight;
-        const context = this.canvas.getContext('2d');
-        context.drawImage(this.camera, 0, 0);
         
-        window.showDebug('✅ Image captured');
-        return this.canvas.toDataURL('image/jpeg', 0.6);
-    }
+        const ctx = this.canvas.getContext('2d');
+        ctx.drawImage(this.camera, 0, 0);
+        
+        // FIX: use a higher quality value and validate image data is not blank
+        const imageData = this.canvas.toDataURL('image/jpeg', 0.85);
 
-    // ============== GROQ AI ANALYSIS ==============
-    async analyzeMedicine(imageData, context = 'scan') {
-        window.showDebug('🤖 Sending to Groq AI...');
+        if (!imageData || imageData === 'data:,') {
+            this.updateStatus('❌ Failed to capture image data');
+            this.stopCamera();
+            return;
+        }
+
+        this.updateStatus('🤖 Analyzing with AI...');
+        
+        const analysis = await this.analyzeWithGroq(imageData);
+        this.displayResults(analysis);
+        
+        // Stop camera after successful capture
+        this.stopCamera();
+    }
+    
+    async analyzeWithGroq(imageData) {
         const base64Image = imageData.split(',')[1];
         
-        const prompt = context === 'scan' 
-            ? `Analyze this medicine image and provide:
-               1. Medicine name
-               2. Expiry date if visible
-               3. Active ingredients
-               4. Basic warnings
-               5. Physical description`
-            : `Extract medicine name and active ingredients only.`;
+        const prompt = `You are a medicine identification assistant. Analyze this medicine image and provide:
+1. Medicine name
+2. Expiry date (if visible, format as DD/MM/YYYY)
+3. Active ingredients
+4. Important warnings
+5. Physical description (color, shape)
 
+Format clearly with each section on a new line starting with the number.`;
+        
         try {
-            console.log('Sending to Groq...');
-            
             const response = await fetch(this.API_URL, {
                 method: 'POST',
                 headers: {
@@ -252,55 +329,31 @@ class SightSage {
                     max_tokens: 1024
                 })
             });
-
+            
             if (!response.ok) {
-                const errorText = await response.text();
-                console.error('API error:', response.status, errorText);
-                window.showDebug(`❌ API error: ${response.status}`);
-                throw new Error(`API error: ${response.status}`);
+                const errorBody = await response.text();
+                throw new Error(`API error ${response.status}: ${errorBody}`);
             }
-
+            
             const data = await response.json();
-            window.showDebug('✅ Analysis complete!');
-            return data.choices[0].message.content;
+            const analysis = data.choices[0].message.content;
+            
+            const medicineInfo = this.parseMedicineInfo(analysis);
+            this.medicines.current = medicineInfo;
+            this.saveToHistory(medicineInfo);
+            
+            if (medicineInfo.expiry && this.isExpired(medicineInfo.expiry)) {
+                this.showEmergency('⚠️ EXPIRED MEDICINE - DO NOT TAKE');
+            }
+            
+            return analysis;
             
         } catch (error) {
-            console.error('Groq analysis error:', error);
-            window.showDebug('❌ Analysis failed');
+            console.error('API error:', error);
             return `Error analyzing image: ${error.message}`;
         }
     }
-
-    async captureAndAnalyze(mode = 'scan') {
-        try {
-            const imageData = await this.captureImage();
-            const analysis = await this.analyzeMedicine(imageData, mode);
-            
-            const medicineInfo = this.parseMedicineInfo(analysis);
-            
-            if (mode === 'scan') {
-                this.medicines.current = medicineInfo;
-                this.displayResults(analysis);
-                this.saveToHistory(medicineInfo);
-                
-                if (medicineInfo.expiry && this.isExpired(medicineInfo.expiry)) {
-                    this.showEmergency('⚠️ EXPIRED MEDICINE - DO NOT TAKE');
-                }
-                
-                this.speak(`Analysis complete. ${medicineInfo.name}`);
-                window.showDebug('✅ Done! Check results');
-            }
-            
-            return medicineInfo;
-            
-        } catch (error) {
-            console.error('Capture error:', error);
-            window.showDebug('❌ Error: ' + error.message);
-            this.displayResults(`Error: ${error.message}`);
-            return null;
-        }
-    }
-
+    
     parseMedicineInfo(analysis) {
         return {
             name: this.extractField(analysis, 1) || 'Unknown',
@@ -310,7 +363,7 @@ class SightSage {
             description: this.extractField(analysis, 5) || ''
         };
     }
-
+    
     extractField(text, fieldNumber) {
         if (!text) return null;
         const patterns = [
@@ -323,21 +376,103 @@ class SightSage {
         }
         return null;
     }
+    
+    stopCamera() {
+        if (this.currentStream) {
+            this.currentStream.getTracks().forEach(track => track.stop());
+            this.currentStream = null;
+        }
+        if (this.camera) {
+            this.camera.srcObject = null;
+            // FIX: hide with display none so next scan can re-show cleanly
+            this.camera.style.display = 'none';
+        }
+    }
+    
+    // ============== COMPARISON FUNCTIONS ==============
 
+    toggleComparisonMode() {
+        if (this.comparisonMode) {
+            this.comparisonMode.classList.toggle('hidden');
+            this.medicines.compare1 = null;
+            this.medicines.compare2 = null;
+            if (this.medicine1Name) this.medicine1Name.textContent = 'Medicine 1';
+            if (this.medicine2Name) this.medicine2Name.textContent = 'Medicine 2';
+            if (this.comparisonResults) {
+                this.comparisonResults.innerHTML = '';
+                this.comparisonResults.classList.add('hidden');
+            }
+        }
+    }
+    
+    async captureForComparison(slot) {
+        this.updateStatus(`📸 Scanning medicine ${slot}...`);
+        
+        try {
+            // Stop any existing stream
+            this.stopCamera();
+
+            let stream;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: 'environment' } }
+                });
+            } catch {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            }
+
+            this.currentStream = stream;
+            this.camera.style.display = 'block';
+            this.camera.srcObject = stream;
+
+            await this.waitForVideoReady(this.camera);
+
+            this.canvas.width = this.camera.videoWidth;
+            this.canvas.height = this.camera.videoHeight;
+            const ctx = this.canvas.getContext('2d');
+            ctx.drawImage(this.camera, 0, 0);
+            const imageData = this.canvas.toDataURL('image/jpeg', 0.85);
+
+            this.stopCamera();
+
+            this.updateStatus(`✅ Medicine ${slot} captured`);
+
+            // Analyze the captured image
+            const analysis = await this.analyzeWithGroq(imageData);
+            const medicine = this.parseMedicineInfo(analysis);
+
+            if (slot === 1) {
+                this.medicines.compare1 = medicine;
+                if (this.medicine1Name) this.medicine1Name.textContent = medicine.name || 'Medicine 1 (captured)';
+            } else {
+                this.medicines.compare2 = medicine;
+                if (this.medicine2Name) this.medicine2Name.textContent = medicine.name || 'Medicine 2 (captured)';
+            }
+
+        } catch (err) {
+            this.handleCameraError(err);
+        }
+    }
+    
     async compareMedicines() {
         if (!this.medicines.compare1 || !this.medicines.compare2) {
             this.speak("Please scan two medicines first");
             return;
         }
-
+        
+        this.updateStatus('🔄 Comparing medicines...');
+        
         const prompt = `Compare these two medicines:
-                       Medicine 1: ${JSON.stringify(this.medicines.compare1)}
-                       Medicine 2: ${JSON.stringify(this.medicines.compare2)}
-                       
-                       Provide: 1. Shared ingredients 2. Interaction warning 3. Advice`;
+Medicine 1: ${JSON.stringify(this.medicines.compare1)}
+Medicine 2: ${JSON.stringify(this.medicines.compare2)}
 
+Provide:
+1. Shared ingredients
+2. Interaction warning (Critical/Caution/Safe)
+3. Simple advice
+4. Overall safety assessment`;
+        
         try {
-            window.showDebug('🔄 Comparing...');
             const response = await fetch(this.API_URL, {
                 method: 'POST',
                 headers: {
@@ -351,7 +486,7 @@ class SightSage {
                     max_tokens: 1024
                 })
             });
-
+            
             const data = await response.json();
             const comparison = data.choices[0].message.content;
             
@@ -361,30 +496,83 @@ class SightSage {
             }
             
             if (comparison.toLowerCase().includes('critical')) {
-                this.showEmergency('⚠️ CRITICAL INTERACTION');
+                this.showEmergency('⚠️ CRITICAL INTERACTION DETECTED');
             }
             
             this.speak("Comparison complete");
-            window.showDebug('✅ Comparison done');
+            
         } catch (error) {
-            window.showDebug('❌ Compare failed');
+            if (this.comparisonResults) {
+                this.comparisonResults.innerHTML = "Error comparing medicines";
+            }
         }
     }
-
+    
     // ============== VOICE FUNCTIONS ==============
+
     initializeVoiceCommands() {
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-            window.showDebug('❌ Voice not supported');
+            console.log('Voice not supported');
             return;
         }
-        window.showDebug('✅ Voice supported');
+        
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        this.recognition = new SpeechRecognition();
+        this.recognition.continuous = true;
+        this.recognition.interimResults = false;
+        
+        this.recognition.onresult = (event) => {
+            const command = event.results[event.results.length - 1][0].transcript.toLowerCase();
+            this.updateStatus(`Heard: "${command}"`);
+            
+            if (command.includes('scan')) {
+                this.startCameraAndScan();
+            } else if (command.includes('compare')) {
+                this.toggleComparisonMode();
+            } else if (command.includes('emergency') || command.includes('help')) {
+                this.handleSOS();
+            }
+        };
+        
+        this.recognition.onerror = () => {
+            this.updateStatus("Voice recognition error");
+            this.isListening = false;
+        };
+        
+        this.recognition.onend = () => {
+            this.isListening = false;
+        };
     }
-
+    
     startVoiceRecognition() {
-        window.showDebug('🎤 Voice mode - say "scan"');
-        setTimeout(() => window.showDebug('✅ Voice ready'), 3000);
+        if (!this.recognition) {
+            this.updateStatus("Voice not available");
+            return;
+        }
+        
+        try {
+            if (this.isListening) {
+                this.recognition.stop();
+                this.isListening = false;
+                return;
+            }
+            
+            this.recognition.start();
+            this.isListening = true;
+            this.updateStatus("🎤 Listening... Say a command");
+            
+            setTimeout(() => {
+                if (this.isListening) {
+                    this.recognition.stop();
+                    this.isListening = false;
+                    this.updateStatus("Voice ready");
+                }
+            }, 10000);
+        } catch (e) {
+            this.updateStatus("Voice error");
+        }
     }
-
+    
     speak(text) {
         if (!text) return;
         window.speechSynthesis.cancel();
@@ -392,48 +580,102 @@ class SightSage {
         utterance.rate = this.voiceSpeed;
         window.speechSynthesis.speak(utterance);
     }
+    
+    // ============== TEXT INPUT ==============
 
     toggleTextInput() {
         if (this.textInputArea) {
             this.textInputArea.classList.toggle('hidden');
-            window.showDebug('📝 Text input toggled');
+            if (!this.textInputArea.classList.contains('hidden') && this.textQuestion) {
+                this.textQuestion.focus();
+            }
         }
     }
-
+    
     async processTextQuestion() {
-        window.showDebug('❓ Processing question...');
-        // Simplified for debugging
-        this.displayResults("Question received! API call would happen here.");
-        this.speak("Question received");
-        window.showDebug('✅ Question processed');
+        if (!this.textQuestion) return;
+        
+        const question = this.textQuestion.value;
+        if (!question) return;
+        
+        this.updateStatus("Processing question...");
+        
+        const context = this.medicines.current ? 
+            `Current medicine: ${JSON.stringify(this.medicines.current)}` : 
+            'No medicine currently scanned';
+            
+        const prompt = `Question about medicine safety: "${question}"
+Context: ${context}
+Provide a clear, simple answer focusing on safety.`;
+        
+        try {
+            const response = await fetch(this.API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: this.TEXT_MODEL,
+                    messages: [{ role: "user", content: prompt }],
+                    temperature: 0.3,
+                    max_tokens: 1024
+                })
+            });
+            
+            const data = await response.json();
+            const answer = data.choices[0].message.content;
+            
+            this.displayResults(answer);
+            this.speak(answer);
+            this.textQuestion.value = '';
+            if (this.textInputArea) {
+                this.textInputArea.classList.add('hidden');
+            }
+            
+        } catch (error) {
+            this.displayResults("Error processing question");
+        }
     }
-
+    
     // ============== EMERGENCY FUNCTIONS ==============
+
     detectTripleTap() {
         this.sosTapCount++;
+        
         if (this.sosTapCount === 1) {
-            this.sosTimer = setTimeout(() => this.sosTapCount = 0, 1000);
+            this.sosTimer = setTimeout(() => {
+                this.sosTapCount = 0;
+            }, 1000);
         }
+        
         if (this.sosTapCount === 3) {
             clearTimeout(this.sosTimer);
             this.sosTapCount = 0;
             this.handleSOS();
         }
     }
-
+    
     handleSOS() {
-        window.showDebug('🚨 SOS ACTIVATED');
-        if (this.sosWarning) this.sosWarning.classList.remove('hidden');
+        if (this.sosWarning) {
+            this.sosWarning.classList.remove('hidden');
+        }
         
-        let emergencyText = "🚨 EMERGENCY\n";
+        let emergencyText = "🚨 EMERGENCY - Current Medicines:\n";
+        
         if (this.medicines.current) {
             emergencyText += `Current: ${this.medicines.current.name}\n`;
         }
         
+        const cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
+        cabinet.forEach(med => {
+            emergencyText += `${med.name} (${med.expiry || 'No expiry'})\n`;
+        });
+        
         this.showEmergency(emergencyText);
         this.speak("SOS activated");
     }
-
+    
     showEmergency(message) {
         if (this.emergencyDetails) {
             this.emergencyDetails.innerHTML = message.replace(/\n/g, '<br>');
@@ -442,7 +684,7 @@ class SightSage {
             this.emergencyOverlay.classList.remove('hidden');
         }
     }
-
+    
     hideEmergency() {
         if (this.emergencyOverlay) {
             this.emergencyOverlay.classList.add('hidden');
@@ -450,38 +692,35 @@ class SightSage {
         if (this.sosWarning) {
             this.sosWarning.classList.add('hidden');
         }
-        window.showDebug('✅ Emergency dismissed');
     }
+    
+    // ============== HISTORY FUNCTIONS ==============
 
-    isExpired(expiryDate) {
-        if (!expiryDate || expiryDate === 'Not visible') return false;
-        const expDate = new Date(expiryDate.split('/').reverse().join('-'));
-        return expDate < new Date();
-    }
-
-    // ============== HISTORY ==============
     saveToHistory(medicine) {
         let cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
+        
         cabinet.unshift({
             ...medicine,
             scannedAt: new Date().toISOString(),
             expired: medicine.expiry ? this.isExpired(medicine.expiry) : false
         });
+        
         cabinet = cabinet.slice(0, 10);
         localStorage.setItem('medicineCabinet', JSON.stringify(cabinet));
         this.displayCabinet();
     }
-
+    
     loadHistory() {
         this.displayCabinet();
     }
-
+    
     displayCabinet() {
         if (!this.medicineCabinet) return;
+        
         const cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
         
         if (cabinet.length === 0) {
-            this.medicineCabinet.innerHTML = '<p>No medicines saved yet.</p>';
+            this.medicineCabinet.innerHTML = '<p>No medicines saved yet</p>';
             return;
         }
         
@@ -494,7 +733,19 @@ class SightSage {
             </div>
         `).join('');
     }
+    
+    // ============== UTILITY FUNCTIONS ==============
 
+    isExpired(expiryDate) {
+        if (!expiryDate || expiryDate === 'Not visible') return false;
+        // FIX: safely parse DD/MM/YYYY
+        const parts = expiryDate.split('/');
+        if (parts.length !== 3) return false;
+        const [day, month, year] = parts;
+        const expDate = new Date(`${year}-${month}-${day}`);
+        return !isNaN(expDate.getTime()) && expDate < new Date();
+    }
+    
     displayResults(text) {
         if (this.scanResults) {
             this.scanResults.innerHTML = text.replace(/\n/g, '<br>');
@@ -502,57 +753,53 @@ class SightSage {
         if (this.results) {
             this.results.classList.remove('hidden');
         }
+        this.updateStatus('✅ Analysis complete');
     }
+    
+    handleCameraError(err) {
+        console.error('Camera error details:', err.name, err.message);
+        this.stopCamera();
 
-    toggleComparisonMode() {
-        if (this.comparisonMode) {
-            this.comparisonMode.classList.toggle('hidden');
-            window.showDebug('🔄 Comparison mode toggled');
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+            this.updateStatus('❌ Camera permission denied');
+            alert('Camera access was denied.\n\nTo fix:\n1. Tap the 🔒 icon in your browser address bar\n2. Set Camera to "Allow"\n3. Refresh the page and try again');
+        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+            this.updateStatus('❌ No camera found');
+            alert('No camera found on this device.');
+        } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+            this.updateStatus('❌ Camera in use by another app');
+            alert('Camera is being used by another app. Close it and try again.');
+        } else if (err.name === 'OverconstrainedError') {
+            this.updateStatus('❌ Camera constraint error – retrying…');
+            // Retry with no constraints
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    this.currentStream = stream;
+                    this.camera.style.display = 'block';
+                    this.camera.srcObject = stream;
+                    return this.waitForVideoReady(this.camera);
+                })
+                .then(() => this.captureAndAnalyze())
+                .catch(e => {
+                    this.updateStatus('❌ Camera failed: ' + e.message);
+                    alert('Camera error: ' + e.message);
+                });
+        } else {
+            this.updateStatus('❌ Camera error: ' + err.message);
+            alert('Camera error: ' + err.message);
         }
     }
-
-    async captureForComparison(slot) {
-        window.showDebug(`📸 Scanning medicine ${slot}...`);
-        const medicine = await this.captureAndAnalyze('compare');
-        if (medicine) {
-            if (slot === 1 && this.medicine1Name) {
-                this.medicine1Name.textContent = medicine.name || 'Medicine 1';
-            } else if (this.medicine2Name) {
-                this.medicine2Name.textContent = medicine.name || 'Medicine 2';
-            }
-            window.showDebug(`✅ Medicine ${slot} captured`);
-        }
-    }
-
-    toggleHighContrast() {
-        document.body.classList.toggle('high-contrast');
-        window.showDebug('🎨 High contrast toggled');
-    }
-
-    toggleLargeText() {
-        document.body.classList.toggle('large-text');
-        window.showDebug('🔤 Large text toggled');
-    }
-
-    toggleVoiceSpeed() {
-        const speeds = [0.5, 0.75, 1, 1.25, 1.5];
-        const currentIndex = speeds.indexOf(this.voiceSpeed);
-        this.voiceSpeed = speeds[(currentIndex + 1) % speeds.length];
-        localStorage.setItem('voiceSpeed', this.voiceSpeed);
-        this.speak(`Speed ${this.voiceSpeed}`);
-        window.showDebug(`🐢 Speed: ${this.voiceSpeed}`);
-    }
-
-    showError(message) {
-        window.showDebug('❌ ' + message);
+    
+    updateStatus(msg) {
+        console.log('Status:', msg);
         if (this.voiceStatus) {
-            this.voiceStatus.textContent = message;
+            this.voiceStatus.innerHTML = msg;
         }
     }
 }
 
 // Initialize app
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, starting app...');
+window.onload = () => {
+    console.log('📱 Page loaded');
     window.app = new SightSage();
-});
+};

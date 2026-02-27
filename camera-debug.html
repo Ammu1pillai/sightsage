@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Camera Debug</title>
+<style>
+  body { font-family: monospace; background: #111; color: #0f0; padding: 16px; }
+  button { display: block; width: 100%; padding: 14px; margin: 8px 0; font-size: 1.1rem;
+           background: #1a1a1a; color: #0f0; border: 1px solid #0f0; cursor: pointer; }
+  button:active { background: #0f0; color: #000; }
+  video { width: 100%; max-width: 480px; display: block; border: 2px solid #0f0; margin: 12px 0; background: #000; }
+  canvas { width: 100%; max-width: 480px; display: block; border: 2px solid #ff0; margin: 12px 0; }
+  #log { white-space: pre-wrap; font-size: 0.85rem; line-height: 1.6;
+         background: #000; padding: 12px; border: 1px solid #333; max-height: 400px; overflow-y: auto; }
+  .ok  { color: #0f0; }
+  .err { color: #f44; }
+  .warn{ color: #ff0; }
+  .info{ color: #4af; }
+</style>
+</head>
+<body>
+<h2>📷 Camera Debug</h2>
+
+<button onclick="step1_checkAPI()">STEP 1 — Check mediaDevices API</button>
+<button onclick="step2_listDevices()">STEP 2 — List available cameras</button>
+<button onclick="step3_openCamera()">STEP 3 — Open camera (environment)</button>
+<button onclick="step3b_openCameraFallback()">STEP 3b — Open camera (no constraints)</button>
+<button onclick="step4_capture()">STEP 4 — Capture frame to canvas</button>
+<button onclick="step5_checkImageData()">STEP 5 — Check image data (blank?)</button>
+<button onclick="stopAll()" style="border-color:#f44;color:#f44">STOP camera</button>
+
+<video id="vid" autoplay playsinline muted></video>
+<canvas id="cvs"></canvas>
+<div id="log"></div>
+
+<script>
+let stream = null;
+const vid = document.getElementById('vid');
+const cvs = document.getElementById('cvs');
+const logEl = document.getElementById('log');
+
+function log(msg, cls='info') {
+  const ts = new Date().toISOString().slice(11,23);
+  logEl.innerHTML += `<span class="${cls}">[${ts}] ${msg}\n</span>`;
+  logEl.scrollTop = logEl.scrollHeight;
+  console.log(msg);
+}
+
+// ── STEP 1 ──────────────────────────────────────────────
+function step1_checkAPI() {
+  log('=== STEP 1: API check ===');
+  log('navigator.mediaDevices: ' + (navigator.mediaDevices ? '✅ exists' : '❌ MISSING'), navigator.mediaDevices ? 'ok' : 'err');
+  log('getUserMedia: '          + (navigator.mediaDevices?.getUserMedia ? '✅ exists' : '❌ MISSING'), navigator.mediaDevices?.getUserMedia ? 'ok' : 'err');
+  log('protocol: ' + location.protocol, location.protocol === 'https:' || location.hostname === 'localhost' ? 'ok' : 'warn');
+  log('hostname: ' + location.hostname);
+  log('userAgent: ' + navigator.userAgent.slice(0,80));
+
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+    log('⚠️ WARNING: getUserMedia requires HTTPS or localhost!', 'warn');
+    log('   If served over http://, camera will be BLOCKED by browser.', 'warn');
+  }
+}
+
+// ── STEP 2 ──────────────────────────────────────────────
+async function step2_listDevices() {
+  log('=== STEP 2: enumerate devices ===');
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cams = devices.filter(d => d.kind === 'videoinput');
+    log('Total devices: ' + devices.length);
+    log('Video inputs: '  + cams.length, cams.length > 0 ? 'ok' : 'err');
+    cams.forEach((c,i) => log(`  cam[${i}]: label="${c.label || '(no label – need permission first)'}" id=${c.deviceId.slice(0,12)}...`));
+    if (cams.length === 0) log('❌ No cameras found at all!', 'err');
+  } catch(e) {
+    log('❌ enumerateDevices failed: ' + e.message, 'err');
+  }
+}
+
+// ── STEP 3 ──────────────────────────────────────────────
+async function step3_openCamera() {
+  log('=== STEP 3: getUserMedia with environment facingMode ===');
+  stopAll();
+  try {
+    log('Requesting: { video: { facingMode: "environment" } }');
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    await attachStream(stream);
+  } catch(e) {
+    log('❌ Failed: ' + e.name + ' — ' + e.message, 'err');
+    log('→ Try STEP 3b (no constraints)', 'warn');
+  }
+}
+
+async function step3b_openCameraFallback() {
+  log('=== STEP 3b: getUserMedia with video:true (no constraints) ===');
+  stopAll();
+  try {
+    log('Requesting: { video: true }');
+    stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    await attachStream(stream);
+  } catch(e) {
+    log('❌ Failed: ' + e.name + ' — ' + e.message, 'err');
+    if (e.name === 'NotAllowedError') {
+      log('→ Camera permission DENIED. Check browser settings.', 'err');
+    } else if (e.name === 'NotFoundError') {
+      log('→ No camera hardware found.', 'err');
+    } else if (e.name === 'NotReadableError') {
+      log('→ Camera is in use by another app.', 'err');
+    }
+  }
+}
+
+async function attachStream(s) {
+  log('✅ Got stream. Tracks: ' + s.getVideoTracks().length, 'ok');
+  const track = s.getVideoTracks()[0];
+  if (track) {
+    log('Track label: ' + (track.label || '(empty)'));
+    log('Track state: ' + track.readyState, track.readyState === 'live' ? 'ok' : 'err');
+    const settings = track.getSettings?.();
+    if (settings) log('Track settings: ' + JSON.stringify(settings));
+  }
+
+  vid.srcObject = s;
+  log('Calling video.play()...');
+  try {
+    await vid.play();
+    log('✅ video.play() resolved', 'ok');
+  } catch(e) {
+    log('⚠️ video.play() rejected: ' + e.message, 'warn');
+  }
+
+  // Poll for dimensions
+  log('Waiting for video dimensions...');
+  await waitForDimensions(vid);
+  log(`✅ Video ready: ${vid.videoWidth}x${vid.videoHeight}  readyState=${vid.readyState}`, 'ok');
+}
+
+function waitForDimensions(v, timeoutMs=8000) {
+  return new Promise((resolve, reject) => {
+    const t0 = Date.now();
+    function check() {
+      if (v.videoWidth > 0 && v.videoHeight > 0) { resolve(); return; }
+      if (Date.now() - t0 > timeoutMs) { reject(new Error('Timed out waiting for dimensions')); return; }
+      requestAnimationFrame(check);
+    }
+    check();
+  });
+}
+
+// ── STEP 4 ──────────────────────────────────────────────
+function step4_capture() {
+  log('=== STEP 4: capture frame ===');
+  if (!stream || !vid.srcObject) { log('❌ No active stream – run Step 3 first', 'err'); return; }
+  log(`video.videoWidth=${vid.videoWidth}  videoHeight=${vid.videoHeight}  readyState=${vid.readyState}`);
+  if (vid.videoWidth === 0) { log('❌ videoWidth is 0 — frame not ready!', 'err'); return; }
+
+  cvs.width  = vid.videoWidth;
+  cvs.height = vid.videoHeight;
+  const ctx = cvs.getContext('2d');
+  ctx.drawImage(vid, 0, 0);
+  log('✅ Frame drawn to canvas', 'ok');
+}
+
+// ── STEP 5 ──────────────────────────────────────────────
+function step5_checkImageData() {
+  log('=== STEP 5: check for blank frame ===');
+  if (cvs.width === 0) { log('❌ Canvas is empty – run Step 4 first', 'err'); return; }
+
+  const ctx = cvs.getContext('2d');
+  const px = ctx.getImageData(0, 0, cvs.width, cvs.height).data;
+
+  // Count non-black pixels
+  let nonBlack = 0;
+  for (let i = 0; i < px.length; i += 4) {
+    if (px[i] > 10 || px[i+1] > 10 || px[i+2] > 10) nonBlack++;
+  }
+  const total = px.length / 4;
+  const pct = ((nonBlack / total) * 100).toFixed(1);
+
+  log(`Total pixels: ${total}  Non-black: ${nonBlack} (${pct}%)`, nonBlack > 100 ? 'ok' : 'err');
+
+  if (nonBlack < 100) {
+    log('❌ Frame appears BLANK (all black). Possible causes:', 'err');
+    log('   • Camera not fully initialized when frame was captured', 'err');
+    log('   • Hardware issue / camera covered', 'err');
+    log('   • Browser security policy blocking pixel read-back', 'err');
+  } else {
+    log('✅ Frame has real image data — camera is working!', 'ok');
+    const dataUrl = cvs.toDataURL('image/jpeg', 0.8);
+    log('JPEG data URL length: ' + dataUrl.length, 'ok');
+  }
+}
+
+// ── STOP ────────────────────────────────────────────────
+function stopAll() {
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
+  vid.srcObject = null;
+  log('Stream stopped.', 'warn');
+}
+
+// Auto-run step 1
+step1_checkAPI();
+</script>
+</body>
+</html>
