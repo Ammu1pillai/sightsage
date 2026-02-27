@@ -427,7 +427,9 @@ Important: Please write naturally like you're speaking to someone, not as a list
             // Look for usage keywords
             if (lowerSentence.includes('used for') || 
                 lowerSentence.includes('treats') ||
-                lowerSentence.includes('helps with')) {
+                lowerSentence.includes('helps with') ||
+                lowerSentence.includes('to treat') ||
+                lowerSentence.includes('for treating')) {
                 
                 let use = sentence.trim();
                 
@@ -438,21 +440,38 @@ Important: Please write naturally like you're speaking to someone, not as a list
                     use = use.split(/treats/i)[1] || use;
                 } else if (lowerSentence.includes('helps with')) {
                     use = use.split(/helps with/i)[1] || use;
+                } else if (lowerSentence.includes('to treat')) {
+                    use = use.split(/to treat/i)[1] || use;
+                } else if (lowerSentence.includes('for treating')) {
+                    use = use.split(/for treating/i)[1] || use;
                 }
                 
                 // Clean up
-                use = use.replace(/^[:\s]+/, '') // Remove leading colons/spaces
-                        .replace(/[.,;:]$/, '') // Remove trailing punctuation
+                use = use.replace(/^[:\s-]+/, '') // Remove leading colons/spaces/dashes
+                        .replace(/[.,;:\s-]+$/, '') // Remove trailing punctuation
                         .trim();
                 
-                // Take only up to first comma or 'and' for brevity
-                use = use.split(/,| and /)[0].trim();
-                
-                if (use.length > 3 && use.length < 60) {
+                // If we got something meaningful, return it
+                if (use && use.length > 3 && use.length < 80) {
                     // Capitalize first letter
                     use = use.charAt(0).toUpperCase() + use.slice(1);
                     return use;
                 }
+            }
+        }
+        
+        // If no keywords found, try to find any sentence that might describe usage
+        for (const sentence of sentences) {
+            const trimmed = sentence.trim();
+            // Look for sentences that are likely describing what it does
+            if (trimmed.length > 10 && trimmed.length < 80 &&
+                !trimmed.toLowerCase().includes('expir') &&
+                !trimmed.toLowerCase().includes('color') &&
+                !trimmed.toLowerCase().includes('shape') &&
+                !trimmed.toLowerCase().includes('side effect')) {
+                
+                // Take first sentence that's not about expiry/appearance
+                return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
             }
         }
         
