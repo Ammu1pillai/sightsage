@@ -373,28 +373,56 @@ Important: Please write naturally like you're speaking to someone, not as a list
 
     
     parseMedicineInfo(analysis) {
+        // More flexible extraction that works with natural language
         return {
-            name: this.extractField(analysis, 1) || 'Unknown',
-            expiry: this.extractField(analysis, 2) || null,
-            ingredients: this.extractField(analysis, 3) || '',
-            warnings: this.extractField(analysis, 4) || '',
-            description: this.extractField(analysis, 5) || ''
+            name: this.extractFieldFlexible(analysis, ['name', 'called']) || 'Unknown',
+            expiry: this.extractExpiryDate(analysis) || null,
+            ingredients: '', // We don't need to extract these separately anymore
+            warnings: '',
+            description: ''
         };
     }
     
-    extractField(text, fieldNumber) {
+    extractFieldFlexible(text, keywords) {
         if (!text) return null;
-        const patterns = [
-            new RegExp(`${fieldNumber}\\.?\\s*([^\\n]+)`),
-            new RegExp(`${fieldNumber}[:\\)]\\s*([^\\n]+)`, 'i'),
-        ];
-        for (const pattern of patterns) {
-            const match = text.match(pattern);
-            if (match) return match[1].trim();
+        const lowerText = text.toLowerCase();
+        for (const keyword of keywords) {
+            const patterns = [
+                new RegExp(`${keyword}[\\s\\:]+([^\\.]+)`, 'i'),
+                new RegExp(`${keyword}[\\s\\:]+([^\\n]+)`, 'i'),
+                new RegExp(`(?:is|called)\\s+([A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*)`, 'i')
+            ];
+            for (const pattern of patterns) {
+                const match = text.match(pattern);
+                if (match) return match[1].trim();
+            }
         }
         return null;
     }
     
+    extractExpiryDate(text) {
+        if (!text) return null;
+        // Look for dates in various formats
+        const patterns = [
+            /expir(?:y|es?)(?:\s+on)?\s*[:\-]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+            /expiration\s+date[:\-]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+            /(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/,
+            /(?:valid|good)\s+(?:until|till)\s+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i
+        ];
+        
+        for (const pattern of patterns) {
+            const match = text.match(pattern);
+            if (match) {
+                // Standardize to DD/MM/YYYY format
+                let date = match[1];
+                // Convert various separators to /
+                date = date.replace(/[.-]/g, '/');
+                return date;
+            }
+        }
+        return null;
+    }
+
     stopCamera() {
         if (this.currentStream) {
             this.currentStream.getTracks().forEach(track => track.stop());
