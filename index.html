@@ -195,12 +195,6 @@
                 <span class="stat-icon">🆘</span>
                 <span class="stat-label">SOS Emergency</span>
             </div>
-        </section>
-
-        <!-- SOS WARNING TOAST -->
-        <div id="sosWarning" class="sos-toast hidden">
-            <i class="fas fa-exclamation-circle"></i>
-            <span>Triple tap detected! SOS ready</span>
         </div>
     </header>
 
@@ -213,7 +207,7 @@
         <div class="sd-line"></div>
     </div>
 
-    <!-- ═══ MAIN GRID ═══ -->
+    <!-- ═══ MAIN GRID (UPDATED FOR SIDE-BY-SIDE CAMERA & RESULTS) ═══ -->
     <main class="main-grid" role="main">
 
         <!-- LEFT COLUMN: CAMERA -->
@@ -285,8 +279,12 @@
                     </div>
                 </button>
             </div>
+        </section>
 
-            <!-- Results -->
+        <!-- RIGHT COLUMN: RESULTS & INFO -->
+        <section class="grid-col col-info" aria-label="Information panels">
+
+            <!-- RESULTS PANEL (NOW ON RIGHT SIDE) -->
             <div id="results" class="results-panel hidden" aria-live="polite">
                 <div class="rp-head">
                     <div class="rp-title-row">
@@ -299,11 +297,6 @@
                 </div>
                 <div id="scanResults" class="rp-body"></div>
             </div>
-
-        </section>
-
-        <!-- RIGHT COLUMN -->
-        <section class="grid-col col-info" aria-label="Information panels">
 
             <!-- Compare card -->
             <div id="comparisonMode" class="info-card cmp-card hidden">
@@ -331,7 +324,7 @@
                 <div id="comparisonResults" class="cmp-results hidden"></div>
             </div>
 
-            <!-- Medicine Cabinet -->
+            <!-- Medicine Cabinet (UPDATED TO DROPDOWN) -->
             <div class="info-card cabinet-card">
                 <div class="ic-head">
                     <span class="ic-icon">🗄</span>
@@ -341,16 +334,16 @@
                     </div>
                     <span class="cabinet-badge" id="cabinetCount" aria-label="Count">0</span>
                 </div>
-                <div id="medicineCabinet" class="cab-list" aria-live="polite">
-                    <div class="cab-empty">
-                        <div class="ce-graphic" aria-hidden="true">
-                            <div class="ce-ring"></div>
-                            <span class="ce-icon">💊</span>
-                        </div>
-                        <p>No medicines scanned yet.</p>
-                        <p class="ce-hint">Scan a medicine to add it here.</p>
-                    </div>
+                
+                <!-- DROPDOWN SELECT INSTEAD OF LIST -->
+                <div class="cabinet-dropdown">
+                    <select id="medicineCabinet" class="cabinet-select">
+                        <option value="">Select a medicine to view details</option>
+                    </select>
                 </div>
+                
+                <!-- Details display when dropdown item is selected (optional) -->
+                <div id="cabinetDetails" class="cabinet-details hidden"></div>
             </div>
 
             <!-- How to use card -->
