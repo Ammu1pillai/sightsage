@@ -792,6 +792,14 @@ body {
     display: none;
 }
 
+.medicine-desc {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin: 4px 0;
+    line-height: 1.4;
+    font-style: italic;
+}
+
 /* How-to card */
 .howto-card { border-top:3px solid var(--saffron); }
 

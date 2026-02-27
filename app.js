@@ -295,26 +295,22 @@ class SightSage {
     async analyzeWithGroq(imageData) {
         const base64Image = imageData.split(',')[1];
         
-        const prompt = `You are SightSage, a caring and patient medicine assistant for elderly and visually impaired users. Look at this medicine image and provide information in a warm, conversational way.
+        const prompt = `You are SightSage, a caring and patient medicine assistant for elderly and visually impaired users. Look at this medicine image and provide information in a warm, conversational, clear way.
 
-Please tell me about this medicine including:
+Please cover these points naturally (not as a numbered list):
 
-1. What's the name of this medicine? (say it clearly)
+• The medicine name
+• Expiry date (or ask to show it if not visible)
+• What it looks like (color, shape)
+• What it's used for
+• How to take it (with/without food)
+• Common side effects
+• Special advice for elderly people
+• If someone has heart problems, what to know
+• Things to avoid (foods, drinks, other medicines)
+• One friendly tip for safe use
 
-2. When does it expire? If you can see the expiry date, tell me in simple terms like "This medicine expires on [date]". If you cannot see the expiry date clearly, kindly ask the user to show the part of the packaging where the expiry date is printed.
-
-3. What does it look like? Describe its color, shape, and any markings in simple words.
-
-4. What is this medicine used for? Explain in simple, everyday language.
-
-5. Important safety information:
-    - Should it be taken with food or on an empty stomach?
-    - Common side effects they might experience
-    - Any special warnings for elderly people
-    - If someone has heart problems (cardiac issues), what should they know before taking this?
-    - Any foods, drinks, or other medicines they should avoid while taking this
-
-6. Friendly advice: Give one or two simple tips about taking this medicine safely.
+Write like you're gently explaining to an older family member - warm, clear, and reassuring. Use short sentences. Keep it complete but easy to follow.
 
 Important: Please write naturally like you're speaking to someone, not as a list with numbers. Use simple words, short sentences, and a warm tone. Avoid medical jargon unless you explain it. If you're not sure about something, be honest about it.`;
         
@@ -342,7 +338,7 @@ Important: Please write naturally like you're speaking to someone, not as a list
                         }
                     ],
                     temperature: 0.4, // Slightly higher for more natural language
-                    max_tokens: 1024
+                    max_tokens: 800
                 })
             });
             
@@ -374,27 +370,134 @@ Important: Please write naturally like you're speaking to someone, not as a list
     
     parseMedicineInfo(analysis) {
         return {
-            name: this.extractField(analysis, 1) || 'Unknown',
-            expiry: this.extractField(analysis, 2) || null,
-            ingredients: this.extractField(analysis, 3) || '',
-            warnings: this.extractField(analysis, 4) || '',
-            description: this.extractField(analysis, 5) || ''
+            name: this.extractFieldFlexible(analysis, ['name', 'called']) || 'Unknown',
+            expiry: this.extractExpiryDate(analysis) || null,
+            description: this.extractBriefDescription(analysis) || '', // New field for one-liner
+            // We don't need these anymore for cabinet display
+            ingredients: '', 
+            warnings: ''
         };
     }
-    
-    extractField(text, fieldNumber) {
-        if (!text) return null;
+
+    extractBriefDescription(analysis) {
+        if (!analysis) return '';
+        
+        // Look for what it's used for in the text
         const patterns = [
-            new RegExp(`${fieldNumber}\\.?\\s*([^\\n]+)`),
-            new RegExp(`${fieldNumber}[:\\)]\\s*([^\\n]+)`, 'i'),
+            /used (?:for|to treat|to help|to manage) ([^\.]+)/i,
+            /treats? ([^\.]+)/i,
+            /for (?:treating|managing|helping with) ([^\.]+)/i,
+            /medicine (?:that|which) helps (?:with|to) ([^\.]+)/i,
+            /prescribed (?:for|to treat) ([^\.]+)/i
         ];
+        
         for (const pattern of patterns) {
-            const match = text.match(pattern);
-            if (match) return match[1].trim();
+            const match = analysis.match(pattern);
+            if (match) {
+                let desc = match[1].trim();
+                // Keep it short - max 60 characters
+                if (desc.length > 60) {
+                    desc = desc.substring(0, 57) + '...';
+                }
+                return desc;
+            }
+        }
+        
+        // Fallback: try to extract a short summary from the beginning
+        const sentences = analysis.split(/[.!?]/);
+        for (const sentence of sentences) {
+            if (sentence.toLowerCase().includes('used for') || 
+                sentence.toLowerCase().includes('treats') ||
+                sentence.toLowerCase().includes('helps')) {
+                let short = sentence.trim();
+                if (short.length > 60) {
+                    short = short.substring(0, 57) + '...';
+                }
+                return short;
+            }
+        }
+        
+        return 'Medicine information';
+    }
+
+    // Update saveToHistory to store the description
+    saveToHistory(medicine) {
+        let cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
+        
+        cabinet.unshift({
+            name: medicine.name || 'Unknown',
+            expiry: medicine.expiry || null,
+            description: medicine.description || 'Medicine information', // Store the one-liner
+            scannedAt: new Date().toISOString(),
+            expired: medicine.expiry ? this.isExpired(medicine.expiry) : false
+        });
+        
+        cabinet = cabinet.slice(0, 10);
+        localStorage.setItem('medicineCabinet', JSON.stringify(cabinet));
+        this.displayCabinet();
+    }
+
+    // Update displayCabinet to show name + description
+    displayCabinet() {
+        if (!this.medicineCabinet) return;
+        
+        const cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
+        
+        if (cabinet.length === 0) {
+            this.medicineCabinet.innerHTML = '<p>No medicines saved yet</p>';
+            return;
+        }
+        
+        this.medicineCabinet.innerHTML = cabinet.map(med => `
+            <div class="medicine-item ${med.expired ? 'expired' : ''}">
+                ${med.expired ? '<span class="expired-label">⚠️ EXPIRED</span>' : ''}
+                <strong>${med.name || 'Unknown'}</strong>
+                <div class="medicine-desc">${med.description || 'Medicine information'}</div>
+                ${med.expiry ? `<small>Expires: ${med.expiry}</small>` : ''}
+            </div>
+        `).join('');
+    }
+    
+    extractFieldFlexible(text, keywords) {
+        if (!text) return null;
+        const lowerText = text.toLowerCase();
+        for (const keyword of keywords) {
+            const patterns = [
+                new RegExp(`${keyword}[\\s\\:]+([^\\.]+)`, 'i'),
+                new RegExp(`${keyword}[\\s\\:]+([^\\n]+)`, 'i'),
+                new RegExp(`(?:is|called)\\s+([A-Z][a-z]+(?:\\s+[A-Z][a-z]+)*)`, 'i')
+            ];
+            for (const pattern of patterns) {
+                const match = text.match(pattern);
+                if (match) return match[1].trim();
+            }
         }
         return null;
     }
     
+    extractExpiryDate(text) {
+        if (!text) return null;
+        // Look for dates in various formats
+        const patterns = [
+            /expir(?:y|es?)(?:\s+on)?\s*[:\-]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+            /expiration\s+date[:\-]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+            /(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/,
+            /(?:valid|good)\s+(?:until|till)\s+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i
+        ];
+        
+        for (const pattern of patterns) {
+            const match = text.match(pattern);
+            if (match) {
+                // Standardize to DD/MM/YYYY format
+                let date = match[1];
+                // Convert various separators to /
+                date = date.replace(/[.-]/g, '/');
+                return date;
+            }
+        }
+        return null;
+    }
+
     stopCamera() {
         if (this.currentStream) {
             this.currentStream.getTracks().forEach(track => track.stop());
