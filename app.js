@@ -102,7 +102,11 @@ class SightSage {
         
         if (this.voiceBtn) {
             this.voiceBtn.onclick = () => {
-                console.log('🎤 Voice clicked');
+                console.log('🎤 Voice clicked'); // THIS LINE ALREADY EXISTS
+                // ADD THESE DEBUG LINES BELOW IT:
+                console.log('🎤 Voice button element:', this.voiceBtn);
+                console.log('🎤 Recognition object exists:', !!this.recognition);
+                console.log('🎤 Current isListening state:', this.isListening);
                 this.startVoiceRecognition();
             };
         }
