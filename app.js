@@ -374,29 +374,34 @@ Important: Please write naturally like you're speaking to someone, not as a list
             description: 'Medicine information'
         };
         
+        const name = this.extractMedicineName(analysis);
+        const description = this.extractMedicineUse(analysis);
+        
         return {
-            name: this.extractMedicineName(analysis) || 'Unknown',
-            description: this.extractMedicineUse(analysis) || 'Medicine information'
+            name: name || 'Unknown',
+            description: description || 'Medicine information'
         };
     }
 
     extractMedicineName(analysis) {
         if (!analysis) return null;
         
+        // Look for medicine name patterns - more specific
         const patterns = [
-            /(?:medicine|called|name(?:\s+is)?)[\s:]+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
-            /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/,
-            /this (?:is|medicine is) ([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i
+            /(?:medicine|called|name(?:\s+is)?)[\s:]+([A-Z][a-z]+(?:[\s-][A-Z][a-z]+)*)/i,
+            /this (?:is|medicine is) ([A-Z][a-z]+(?:[\s-][A-Z][a-z]+)*)/i,
+            /^([A-Z][a-z]+(?:[\s-][A-Z][a-z]+)*)/  // Only if it starts with capital letters
         ];
         
         for (const pattern of patterns) {
             const match = analysis.match(pattern);
-            if (match) return match[1].trim();
-        }
-        
-        const words = analysis.split(' ');
-        if (words.length >= 2) {
-            return words.slice(0, 2).join(' ');
+            if (match && match[1]) {
+                let name = match[1].trim();
+                // Validate it looks like a medicine name (not too long, not common words)
+                if (name.length < 30 && !name.match(/^(this|the|your|please|here|what|when|how)$/i)) {
+                    return name;
+                }
+            }
         }
         
         return null;
@@ -405,40 +410,47 @@ Important: Please write naturally like you're speaking to someone, not as a list
     extractMedicineUse(analysis) {
         if (!analysis) return null;
         
-        // Look for what it's used for
+        // Look for what it's used for - more specific
         const patterns = [
             /used (?:for|to treat|to help|to manage) ([^\.]+)/i,
             /treats? ([^\.]+)/i,
             /for (?:treating|managing|helping with) ([^\.]+)/i,
-            /medicine (?:that|which) helps (?:with|to) ([^\.]+)/i,
-            /prescribed (?:for|to treat) ([^\.]+)/i,
-            /helps (?:with|to) ([^\.]+)/i,
-            /(?:high blood pressure|diabetes|pain|fever|infection|cough|cold|allergy|inflammation)/i
+            /helps (?:with|to) ([^\.]+)/i
         ];
         
         for (const pattern of patterns) {
             const match = analysis.match(pattern);
-            if (match) {
-                let use = match[1] || match[0];
-                // Clean up and shorten
-                use = use.replace(/^(?:to|with|for)\s+/i, '').trim();
-                if (use.length > 50) {
-                    use = use.substring(0, 47) + '...';
+            if (match && match[1]) {
+                let use = match[1].trim();
+                // Clean up and validate
+                use = use.replace(/^(?:to|with|for|a|an|the)\s+/i, '').trim();
+                
+                // Make sure it's not too short or just common words
+                if (use.length > 5 && !use.match(/^(this|that|these|those|here|there)$/i)) {
+                    // Capitalize first letter
+                    use = use.charAt(0).toUpperCase() + use.slice(1);
+                    if (use.length > 50) {
+                        use = use.substring(0, 47) + '...';
+                    }
+                    return use;
                 }
-                return use;
             }
         }
         
-        // Look for common conditions
-        const conditions = [
-            'blood pressure', 'diabetes', 'pain', 'fever', 'infection', 
-            'cough', 'cold', 'allergy', 'inflammation', 'cholesterol',
-            'heart', 'stomach', 'headache', 'arthritis'
-        ];
-        
-        for (const condition of conditions) {
-            if (analysis.toLowerCase().includes(condition)) {
-                return `Used for ${condition}`;
+        // If no pattern matches, look for the first sentence that might describe usage
+        const sentences = analysis.split(/[.!?]/);
+        for (const sentence of sentences) {
+            if (sentence.toLowerCase().includes('used for') || 
+                sentence.toLowerCase().includes('treats') ||
+                sentence.toLowerCase().includes('helps')) {
+                let use = sentence.trim();
+                // Extract just the key part
+                use = use.replace(/^(.*?(?:used for|treats|helps|for))/, '').trim();
+                if (use.length > 5 && use.length < 100) {
+                    use = use.charAt(0).toUpperCase() + use.slice(1);
+                    if (use.length > 50) use = use.substring(0, 47) + '...';
+                    return use;
+                }
             }
         }
         
@@ -464,6 +476,7 @@ Important: Please write naturally like you're speaking to someone, not as a list
 
     // Update displayCabinet to show name + description
     // Update displayCabinet to work with dropdown select
+    // Update displayCabinet to work with dropdown select
     displayCabinet() {
         if (!this.medicineCabinet) return;
         
@@ -485,16 +498,12 @@ Important: Please write naturally like you're speaking to someone, not as a list
             // Create display text with name and description
             let displayText = med.name || 'Unknown';
             if (med.description && med.description !== 'Medicine information') {
-                displayText += ` - ${med.description}`;
+                // Clean up description - remove "Used for" prefix if present
+                let cleanDesc = med.description.replace(/^used for\s+/i, '');
+                displayText += ` - ${cleanDesc}`;
             }
             
             option.textContent = displayText;
-            
-            // Add class if expired
-            if (med.expired) {
-                option.classList.add('expired-option');
-            }
-            
             this.medicineCabinet.appendChild(option);
         });
         
@@ -513,7 +522,6 @@ Important: Please write naturally like you're speaking to someone, not as a list
                     ${selectedMed.description ? `<span class="medicine-desc">${selectedMed.description}</span><br>` : ''}
                     <small>Scanned: ${new Date(selectedMed.scannedAt).toLocaleDateString()}</small>
                     ${selectedMed.expiry ? `<br><small>Expires: ${selectedMed.expiry}</small>` : ''}
-                    ${selectedMed.expired ? '<br><span class="expired-label">⚠️ EXPIRED</span>' : ''}
                 `;
                 cabinetDetails.classList.remove('hidden');
             }
