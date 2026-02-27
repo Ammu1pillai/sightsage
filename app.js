@@ -463,58 +463,67 @@ Important: Please write naturally like you're speaking to someone, not as a list
     }
 
     // Update displayCabinet to show name + description
+    // Update displayCabinet to work with dropdown select
     displayCabinet() {
         if (!this.medicineCabinet) return;
         
         const cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
+        const cabinetDetails = document.getElementById('cabinetDetails');
+        
+        // Clear current options
+        this.medicineCabinet.innerHTML = '<option value="">Select a medicine to view details</option>';
         
         if (cabinet.length === 0) {
-            this.medicineCabinet.innerHTML = '<p>No medicines saved yet</p>';
             return;
         }
         
-        // Check if we need to show the "show more" button
-        const showDropdown = cabinet.length > 3;
-        const visibleItems = showDropdown ? cabinet.slice(0, 3) : cabinet;
-        const hiddenItems = showDropdown ? cabinet.slice(3) : [];
-        
-        let html = '';
-        
-        // Show first 3 items
-        visibleItems.forEach(med => {
-            html += `
-                <div class="medicine-item">
-                    <strong>${med.name || 'Unknown'}</strong>
-                    <div class="medicine-desc">${med.description || 'Medicine information'}</div>
-                    <small>Scanned: ${new Date(med.scannedAt).toLocaleDateString()}</small>
-                </div>
-            `;
+        // Add medicines to dropdown
+        cabinet.forEach((med, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            
+            // Create display text with name and description
+            let displayText = med.name || 'Unknown';
+            if (med.description && med.description !== 'Medicine information') {
+                displayText += ` - ${med.description}`;
+            }
+            
+            option.textContent = displayText;
+            
+            // Add class if expired
+            if (med.expired) {
+                option.classList.add('expired-option');
+            }
+            
+            this.medicineCabinet.appendChild(option);
         });
         
-        // Add dropdown for remaining items
-        if (showDropdown) {
-            html += `
-                <div class="medicine-dropdown">
-                    <button class="dropdown-toggle" onclick="this.nextElementSibling.classList.toggle('hidden'); this.classList.toggle('active')">
-                        <span>▼ Show ${hiddenItems.length} more medicine${hiddenItems.length > 1 ? 's' : ''}</span>
-                    </button>
-                    <div class="dropdown-items hidden">
-            `;
+        // Add change event listener to show details
+        this.medicineCabinet.onchange = (e) => {
+            const selectedIndex = e.target.value;
+            if (selectedIndex === '') {
+                if (cabinetDetails) cabinetDetails.classList.add('hidden');
+                return;
+            }
             
-            hiddenItems.forEach(med => {
-                html += `
-                    <div class="medicine-item dropdown-item">
-                        <strong>${med.name || 'Unknown'}</strong>
-                        <div class="medicine-desc">${med.description || 'Medicine information'}</div>
-                        <small>Scanned: ${new Date(med.scannedAt).toLocaleDateString()}</small>
-                    </div>
+            const selectedMed = cabinet[selectedIndex];
+            if (selectedMed && cabinetDetails) {
+                cabinetDetails.innerHTML = `
+                    <strong>${selectedMed.name || 'Unknown'}</strong><br>
+                    ${selectedMed.description ? `<span class="medicine-desc">${selectedMed.description}</span><br>` : ''}
+                    <small>Scanned: ${new Date(selectedMed.scannedAt).toLocaleDateString()}</small>
+                    ${selectedMed.expiry ? `<br><small>Expires: ${selectedMed.expiry}</small>` : ''}
+                    ${selectedMed.expired ? '<br><span class="expired-label">⚠️ EXPIRED</span>' : ''}
                 `;
-            });
-            
-            html += `</div></div>`;
-        }
+                cabinetDetails.classList.remove('hidden');
+            }
+        };
         
-        this.medicineCabinet.innerHTML = html;
+        // Update badge count
+        const badge = document.getElementById('cabinetCount');
+        if (badge) {
+            badge.textContent = cabinet.length;
+        }
     }
     
     loadHistory() {

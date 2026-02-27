@@ -279,6 +279,27 @@
                     </div>
                 </button>
             </div>
+
+            <div class="info-card cabinet-card">
+                <div class="ic-head">
+                    <span class="ic-icon">🗄</span>
+                    <div>
+                        <h3>Medicine Cabinet</h3>
+                        <p class="ic-sub">Your recently scanned medicines</p>
+                    </div>
+                    <span class="cabinet-badge" id="cabinetCount" aria-label="Count">0</span>
+                </div>
+                
+                <!-- DROPDOWN SELECT INSTEAD OF LIST -->
+                <div class="cabinet-dropdown">
+                    <select id="medicineCabinet" class="cabinet-select">
+                        <option value="">Select a medicine to view details</option>
+                    </select>
+                </div>
+                
+                <!-- Details display when dropdown item is selected (optional) -->
+                <div id="cabinetDetails" class="cabinet-details hidden"></div>
+            </div>
         </section>
 
         <!-- RIGHT COLUMN: RESULTS & INFO -->
@@ -322,28 +343,6 @@
                 </div>
                 <button id="performComparison" class="cmp-go-btn">Compare Now →</button>
                 <div id="comparisonResults" class="cmp-results hidden"></div>
-            </div>
-
-            <!-- Medicine Cabinet (UPDATED TO DROPDOWN) -->
-            <div class="info-card cabinet-card">
-                <div class="ic-head">
-                    <span class="ic-icon">🗄</span>
-                    <div>
-                        <h3>Medicine Cabinet</h3>
-                        <p class="ic-sub">Your recently scanned medicines</p>
-                    </div>
-                    <span class="cabinet-badge" id="cabinetCount" aria-label="Count">0</span>
-                </div>
-                
-                <!-- DROPDOWN SELECT INSTEAD OF LIST -->
-                <div class="cabinet-dropdown">
-                    <select id="medicineCabinet" class="cabinet-select">
-                        <option value="">Select a medicine to view details</option>
-                    </select>
-                </div>
-                
-                <!-- Details display when dropdown item is selected (optional) -->
-                <div id="cabinetDetails" class="cabinet-details hidden"></div>
             </div>
 
             <!-- How to use card -->

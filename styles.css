@@ -339,13 +339,6 @@ body {
 }
 .hbtn-ghost:hover { background:var(--teal); color:var(--bg); transform:translateY(-3px); }
 
-.medicine-desc {
-    font-size: 0.85rem;
-    color: var(--text-dim);
-    margin: 4px 0;
-    line-height: 1.4;
-    font-style: italic;
-}
 
 /* Text input */
 .text-panel {
@@ -787,10 +780,6 @@ body {
     animation: fadeUp 0.3s var(--ease-out);
 }
 
-/* Hide old cabinet list */
-.cab-list {
-    display: none;
-}
 
 .medicine-desc {
     font-size: 0.85rem;
