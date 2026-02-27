@@ -746,6 +746,55 @@ body {
     font-style: italic;
 }
 
+.medicine-dropdown {
+    margin-top: 8px;
+}
+
+.dropdown-toggle {
+    width: 100%;
+    padding: 10px;
+    background: var(--card2);
+    border: 1px solid var(--card-border);
+    border-radius: var(--r-md);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.dropdown-toggle:hover {
+    background: var(--blue-glow);
+    border-color: var(--blue);
+}
+
+.dropdown-toggle.active span {
+    transform: rotate(180deg);
+}
+
+.dropdown-toggle span {
+    transition: transform 0.2s ease;
+}
+
+.dropdown-items {
+    margin-top: 8px;
+    padding-left: 12px;
+    border-left: 2px solid var(--card-border);
+}
+
+.dropdown-item {
+    margin-bottom: 8px;
+    opacity: 0.9;
+}
+
+.dropdown-item:last-child {
+    margin-bottom: 0;
+}
+
 /* How-to card */
 .howto-card { border-top:3px solid var(--saffron); }
 

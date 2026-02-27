@@ -369,55 +369,80 @@ Important: Please write naturally like you're speaking to someone, not as a list
 
     
     parseMedicineInfo(analysis) {
+        if (!analysis) return {
+            name: 'Unknown',
+            description: 'Medicine information'
+        };
+        
         return {
-            name: this.extractFieldFlexible(analysis, ['name', 'called']) || 'Unknown',
-            expiry: this.extractExpiryDate(analysis) || null,
-            description: this.extractBriefDescription(analysis) || '', // New field for one-liner
-            // We don't need these anymore for cabinet display
-            ingredients: '', 
-            warnings: ''
+            name: this.extractMedicineName(analysis) || 'Unknown',
+            description: this.extractMedicineUse(analysis) || 'Medicine information'
         };
     }
 
-    extractBriefDescription(analysis) {
-        if (!analysis) return '';
+    extractMedicineName(analysis) {
+        if (!analysis) return null;
         
-        // Look for what it's used for in the text
+        const patterns = [
+            /(?:medicine|called|name(?:\s+is)?)[\s:]+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i,
+            /^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/,
+            /this (?:is|medicine is) ([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i
+        ];
+        
+        for (const pattern of patterns) {
+            const match = analysis.match(pattern);
+            if (match) return match[1].trim();
+        }
+        
+        const words = analysis.split(' ');
+        if (words.length >= 2) {
+            return words.slice(0, 2).join(' ');
+        }
+        
+        return null;
+    }
+
+    extractMedicineUse(analysis) {
+        if (!analysis) return null;
+        
+        // Look for what it's used for
         const patterns = [
             /used (?:for|to treat|to help|to manage) ([^\.]+)/i,
             /treats? ([^\.]+)/i,
             /for (?:treating|managing|helping with) ([^\.]+)/i,
             /medicine (?:that|which) helps (?:with|to) ([^\.]+)/i,
-            /prescribed (?:for|to treat) ([^\.]+)/i
+            /prescribed (?:for|to treat) ([^\.]+)/i,
+            /helps (?:with|to) ([^\.]+)/i,
+            /(?:high blood pressure|diabetes|pain|fever|infection|cough|cold|allergy|inflammation)/i
         ];
         
         for (const pattern of patterns) {
             const match = analysis.match(pattern);
             if (match) {
-                let desc = match[1].trim();
-                // Keep it short - max 60 characters
-                if (desc.length > 60) {
-                    desc = desc.substring(0, 57) + '...';
+                let use = match[1] || match[0];
+                // Clean up and shorten
+                use = use.replace(/^(?:to|with|for)\s+/i, '').trim();
+                if (use.length > 50) {
+                    use = use.substring(0, 47) + '...';
                 }
-                return desc;
+                return use;
             }
         }
         
-        // Fallback: try to extract a short summary from the beginning
-        const sentences = analysis.split(/[.!?]/);
-        for (const sentence of sentences) {
-            if (sentence.toLowerCase().includes('used for') || 
-                sentence.toLowerCase().includes('treats') ||
-                sentence.toLowerCase().includes('helps')) {
-                let short = sentence.trim();
-                if (short.length > 60) {
-                    short = short.substring(0, 57) + '...';
-                }
-                return short;
+        // Look for common conditions
+        const conditions = [
+            'blood pressure', 'diabetes', 'pain', 'fever', 'infection', 
+            'cough', 'cold', 'allergy', 'inflammation', 'cholesterol',
+            'heart', 'stomach', 'headache', 'arthritis'
+        ];
+        
+        for (const condition of conditions) {
+            if (analysis.toLowerCase().includes(condition)) {
+                return `Used for ${condition}`;
             }
         }
         
-        return 'Medicine information';
+        return null;
     }
 
     // Update saveToHistory to store the description
@@ -448,14 +473,48 @@ Important: Please write naturally like you're speaking to someone, not as a list
             return;
         }
         
-        this.medicineCabinet.innerHTML = cabinet.map(med => `
-            <div class="medicine-item ${med.expired ? 'expired' : ''}">
-                ${med.expired ? '<span class="expired-label">⚠️ EXPIRED</span>' : ''}
-                <strong>${med.name || 'Unknown'}</strong>
-                <div class="medicine-desc">${med.description || 'Medicine information'}</div>
-                ${med.expiry ? `<small>Expires: ${med.expiry}</small>` : ''}
-            </div>
-        `).join('');
+        // Check if we need to show the "show more" button
+        const showDropdown = cabinet.length > 3;
+        const visibleItems = showDropdown ? cabinet.slice(0, 3) : cabinet;
+        const hiddenItems = showDropdown ? cabinet.slice(3) : [];
+        
+        let html = '';
+        
+        // Show first 3 items
+        visibleItems.forEach(med => {
+            html += `
+                <div class="medicine-item">
+                    <strong>${med.name || 'Unknown'}</strong>
+                    <div class="medicine-desc">${med.description || 'Medicine information'}</div>
+                    <small>Scanned: ${new Date(med.scannedAt).toLocaleDateString()}</small>
+                </div>
+            `;
+        });
+        
+        // Add dropdown for remaining items
+        if (showDropdown) {
+            html += `
+                <div class="medicine-dropdown">
+                    <button class="dropdown-toggle" onclick="this.nextElementSibling.classList.toggle('hidden'); this.classList.toggle('active')">
+                        <span>▼ Show ${hiddenItems.length} more medicine${hiddenItems.length > 1 ? 's' : ''}</span>
+                    </button>
+                    <div class="dropdown-items hidden">
+            `;
+            
+            hiddenItems.forEach(med => {
+                html += `
+                    <div class="medicine-item dropdown-item">
+                        <strong>${med.name || 'Unknown'}</strong>
+                        <div class="medicine-desc">${med.description || 'Medicine information'}</div>
+                        <small>Scanned: ${new Date(med.scannedAt).toLocaleDateString()}</small>
+                    </div>
+                `;
+            });
+            
+            html += `</div></div>`;
+        }
+        
+        this.medicineCabinet.innerHTML = html;
     }
     
     extractFieldFlexible(text, keywords) {
@@ -817,43 +876,7 @@ Provide a clear, simple answer focusing on safety.`;
     
     // ============== HISTORY FUNCTIONS ==============
 
-    saveToHistory(medicine) {
-        let cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
-        
-        cabinet.unshift({
-            ...medicine,
-            scannedAt: new Date().toISOString(),
-            expired: medicine.expiry ? this.isExpired(medicine.expiry) : false
-        });
-        
-        cabinet = cabinet.slice(0, 10);
-        localStorage.setItem('medicineCabinet', JSON.stringify(cabinet));
-        this.displayCabinet();
-    }
     
-    loadHistory() {
-        this.displayCabinet();
-    }
-    
-    displayCabinet() {
-        if (!this.medicineCabinet) return;
-        
-        const cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
-        
-        if (cabinet.length === 0) {
-            this.medicineCabinet.innerHTML = '<p>No medicines saved yet</p>';
-            return;
-        }
-        
-        this.medicineCabinet.innerHTML = cabinet.map(med => `
-            <div class="medicine-item ${med.expired ? 'expired' : ''}">
-                ${med.expired ? '<span class="expired-label">⚠️ EXPIRED</span>' : ''}
-                <strong>${med.name || 'Unknown'}</strong><br>
-                ${med.expiry ? `Expires: ${med.expiry}<br>` : ''}
-                <small>${new Date(med.scannedAt).toLocaleDateString()}</small>
-            </div>
-        `).join('');
-    }
     
     // ============== UTILITY FUNCTIONS ==============
 
