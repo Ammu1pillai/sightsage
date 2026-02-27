@@ -299,22 +299,26 @@ class SightSage {
     async analyzeWithGroq(imageData) {
         const base64Image = imageData.split(',')[1];
         
-        const prompt = `You are SightSage, a caring and patient medicine assistant for elderly and visually impaired users. Look at this medicine image and provide information in a warm, conversational, clear way.
+        const prompt = `You are SightSage, a patient medicine assistant for elderly and visually impaired users. Look at this medicine image and provide information in an EXACT, conversational, clear way.
 
 Please cover these points naturally (not as a numbered list):
 
-• The medicine name
-• Expiry date (or ask to show it if not visible)
-• What it looks like (color, shape)
-• What it's used for
-• How to take it (with/without food)
-• Common side effects
-• Special advice for elderly people
-• If someone has heart problems, what to know
-• Things to avoid (foods, drinks, other medicines)
-• One friendly tip for safe use
+IMPORTANT - EXPIRY DATE: Look carefully at the image for any expiry date. It might be labeled as "EXP", "Expiry", "Use by", "Best before", or a date in DD/MM/YYYY or MM/YYYY format. If you see it, state it exactly as shown.
 
-Write like you're gently explaining to an older family member - warm, clear, and reassuring. Use short sentences. Keep it complete but easy to follow.
+Provide the following information in a clear, structured way:
+
+MEDICINE NAME: [exact name from packaging]
+EXPIRY DATE: [exact date if visible, or "NOT VISIBLE"]
+APPEARANCE: [color, shape, markings]
+USES: [what it's commonly used for]
+HOW TO TAKE: [with/without food, any special instructions]
+COMMON SIDE EFFECTS: [brief list]
+ELDERLY ADVICE: [special considerations for elderly]
+HEART PATIENTS: [what heart patients should know]
+AVOID: [foods, drinks, or medicines to avoid]
+SAFETY TIP: [one practical tip]
+
+Be direct and factual. If you see an expiry date, you MUST include it exactly as shown.
 
 Important: Please write naturally like you're speaking to someone, not as a list with numbers. Use simple words, short sentences, and a warm tone. Avoid medical jargon unless you explain it. If you're not sure about something, be honest about it.`;
         
@@ -582,24 +586,51 @@ Important: Please write naturally like you're speaking to someone, not as a list
     
     extractExpiryDate(text) {
         if (!text) return null;
-        // Look for dates in various formats
+        
+        // Look for expiry date in various formats
         const patterns = [
-            /expir(?:y|es?)(?:\s+on)?\s*[:\-]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-            /expiration\s+date[:\-]?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+            // "EXPIRY DATE: 12/2025" or "EXPIRY DATE: 31/12/2025"
+            /expiry\s*date:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+            /expiry\s*date:?\s*(\d{1,2}[-/]\d{2,4})/i, // For MM/YYYY
+            
+            // "EXP: 12/2025" or "EXP: 31/12/2025"
+            /exp:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+            /exp:?\s*(\d{1,2}[-/]\d{2,4})/i,
+            
+            // "Use by: 12/2025"
+            /use by:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+            /use by:?\s*(\d{1,2}[-/]\d{2,4})/i,
+            
+            // "Best before: 12/2025"
+            /best before:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+            /best before:?\s*(\d{1,2}[-/]\d{2,4})/i,
+            
+            // Just a date that might be expiry
             /(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/,
-            /(?:valid|good)\s+(?:until|till)\s+(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i
+            /(\d{1,2}[-/]\d{2,4})/
         ];
         
         for (const pattern of patterns) {
             const match = text.match(pattern);
-            if (match) {
-                // Standardize to DD/MM/YYYY format
-                let date = match[1];
+            if (match && match[1]) {
+                let date = match[1].trim();
                 // Convert various separators to /
                 date = date.replace(/[.-]/g, '/');
+                
+                // If it's just MM/YYYY, add a day
+                if (date.match(/^\d{1,2}\/\d{4}$/)) {
+                    date = `01/${date}`; // Assume first day of month
+                }
+                
                 return date;
             }
         }
+        
+        // Check if AI explicitly said it's not visible
+        if (text.toLowerCase().includes('expiry date: not visible')) {
+            return null;
+        }
+        
         return null;
     }
 
@@ -887,59 +918,44 @@ Provide a clear, simple answer focusing on safety.`;
             this.sosWarning.classList.remove('hidden');
         }
         
-        // Get current time for timestamp
         const now = new Date();
         const timestamp = now.toLocaleString();
         
-        // Build comprehensive emergency report
+        // Get valid medicines only (filter out junk)
+        const cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
+        const validMeds = cabinet.filter(med => 
+            med.name && 
+            med.name !== 'Unknown' && 
+            med.name.length < 50 && // Filter out long error messages
+            !med.name.includes('image') && 
+            !med.name.includes('see any')
+        );
+        
         let emergencyText = "🚨 EMERGENCY REPORT\n";
         emergencyText += `🕐 ${timestamp}\n\n`;
+        emergencyText += "💊 MEDICINES BEING TAKEN:\n";
         
-        // 1. Current medicine (last scanned)
-        emergencyText += "📍 CURRENT MEDICINE:\n";
-        if (this.medicines.current) {
-            emergencyText += `• ${this.medicines.current.name}\n`;
-            if (this.medicines.current.expiry) {
-                emergencyText += `  Expires: ${this.medicines.current.expiry}\n`;
-            }
+        if (validMeds.length === 0) {
+            emergencyText += "• No medicines recorded\n";
         } else {
-            emergencyText += "• No medicine currently scanned\n";
-        }
-        
-        // 2. Medicine cabinet history
-        const cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
-        emergencyText += `\n📋 MEDICINE HISTORY (last 10):\n`;
-        
-        if (cabinet.length === 0) {
-            emergencyText += "• No medicines in history\n";
-        } else {
-            cabinet.slice(0, 5).forEach((med, i) => { // Show last 5
+            // Show only the 5 most recent valid medicines
+            validMeds.slice(0, 5).forEach((med, i) => {
                 emergencyText += `${i+1}. ${med.name}`;
-                if (med.expiry) emergencyText += ` (Exp: ${med.expiry})`;
-                emergencyText += `\n   Scanned: ${new Date(med.scannedAt).toLocaleDateString()}\n`;
+                if (med.expiry) {
+                    const expired = this.isExpired(med.expiry) ? " ⚠️ EXPIRED" : "";
+                    emergencyText += ` (Exp: ${med.expiry}${expired})`;
+                }
+                emergencyText += `\n`;
             });
         }
         
-        // 3. Important medical alerts
-        emergencyText += `\n⚠️ ALERTS:\n`;
-        const expiredMeds = cabinet.filter(med => med.expired);
-        if (expiredMeds.length > 0) {
-            emergencyText += `• EXPIRED MEDICINES FOUND:\n`;
-            expiredMeds.forEach(med => {
-                emergencyText += `  - ${med.name} (expired ${med.expiry})\n`;
-            });
-        } else {
-            emergencyText += "• No expired medicines detected\n";
-        }
-        
-        // 4. Emergency instructions
-        emergencyText += `\n📞 EMERGENCY CONTACT:\n`;
-        emergencyText += `• Call emergency services: 108 (India) or 911 (US)\n`;
-        emergencyText += `• Show this screen to the doctor\n`;
-        emergencyText += `• Keep medicine packaging handy\n`;
+        emergencyText += `\n📞 ACTION REQUIRED:\n`;
+        emergencyText += `• If serious: Call 108 (India) or 911 (US)\n`;
+        emergencyText += `• Show this list to the doctor\n`;
+        emergencyText += `• Bring the actual medicine packets\n`;
         
         this.showEmergency(emergencyText);
-        this.speak("SOS activated. Emergency information displayed.");
+        this.speak("SOS activated. Showing medicine list.");
     }
     
     showEmergency(message) {
