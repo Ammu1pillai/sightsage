@@ -305,6 +305,8 @@ Please cover these points naturally (not as a numbered list):
 
 IMPORTANT - EXPIRY DATE: Look carefully at the image for any expiry date. It might be labeled as "EXP", "Expiry", "Use by", "Best before", or a date in DD/MM/YYYY or MM/YYYY format. If you see it, state it exactly as shown.
 
+⚠️ CRITICAL WARNING: If the expiry date has passed, you MUST explicitly state "DO NOT TAKE THIS MEDICINE - IT HAS EXPIRED" in your response.
+
 Provide the following information in a clear, structured way:
 
 MEDICINE NAME: [exact name from packaging]
