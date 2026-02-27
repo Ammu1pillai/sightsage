@@ -1,10 +1,15 @@
-// SightSage - Complete MVP Implementation
-// All features implemented with Gemini AI (no hardcoded data)
-
+// SightSage - Complete MVP Implementation with Groq
 class SightSage {
     constructor() {
-        this.API_KEY = 'AIzaSyA5epOOO1yW0lcCrD-2F62VVmEcKgxicbQ'; // Replace with your key
-        this.API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+        // Your Groq API key
+        this.API_KEY = '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';
+        
+        // Groq API endpoint (OpenAI-compatible)
+        this.API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+        
+        // Use Llama 4 Scout for vision tasks
+        this.VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
+        this.TEXT_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
         
         // State management
         this.medicines = {
@@ -26,6 +31,8 @@ class SightSage {
         
         // Feature 24: Voice Speed Control
         this.voiceSpeed = parseFloat(localStorage.getItem('voiceSpeed')) || 1;
+        
+        console.log('SightSage initialized with Groq!');
     }
 
     initializeElements() {
@@ -70,9 +77,20 @@ class SightSage {
 
     initializeEventListeners() {
         // Core scanning
-        this.scanButton.addEventListener('click', () => this.captureAndAnalyze('scan'));
-        this.compareButton.addEventListener('click', () => this.toggleComparisonMode());
-        this.sosButton.addEventListener('click', () => this.handleSOS());
+        this.scanButton.addEventListener('click', () => {
+            console.log('Scan button clicked');
+            this.captureAndAnalyze('scan');
+        });
+        
+        this.compareButton.addEventListener('click', () => {
+            console.log('Compare button clicked');
+            this.toggleComparisonMode();
+        });
+        
+        this.sosButton.addEventListener('click', () => {
+            console.log('SOS button clicked');
+            this.handleSOS();
+        });
         
         // Voice and text
         this.voiceButton.addEventListener('click', () => this.startVoiceRecognition());
@@ -83,7 +101,11 @@ class SightSage {
         });
         
         // Read aloud
-        this.readAloudButton.addEventListener('click', () => this.speak(this.scanResults.textContent));
+        this.readAloudButton.addEventListener('click', () => {
+            if (this.scanResults.textContent) {
+                this.speak(this.scanResults.textContent);
+            }
+        });
         
         // Accessibility
         this.highContrastToggle.addEventListener('click', () => this.toggleHighContrast());
@@ -109,86 +131,156 @@ class SightSage {
                 video: { facingMode: 'environment' } 
             });
             this.camera.srcObject = stream;
+            console.log('Camera initialized');
         } catch (err) {
+            console.error('Camera error:', err);
             this.showError('Camera access needed for scanning');
         }
     }
 
     async captureImage() {
+        // Ensure video is ready
+        if (!this.camera.videoWidth) {
+            await new Promise(resolve => {
+                this.camera.onloadedmetadata = () => resolve();
+            });
+        }
+        
         this.canvas.width = this.camera.videoWidth;
         this.canvas.height = this.camera.videoHeight;
         const context = this.canvas.getContext('2d');
         context.drawImage(this.camera, 0, 0);
-        return this.canvas.toDataURL('image/jpeg', 0.8);
+        
+        // Get base64 image (resize to stay under Groq's 4MB limit) [citation:2]
+        const imageData = this.canvas.toDataURL('image/jpeg', 0.6);
+        return imageData;
     }
 
-    // ============== AI ANALYSIS (Features 1-5) ==============
+    // ============== GROQ AI ANALYSIS ==============
     async analyzeMedicine(imageData, context = 'scan') {
         const base64Image = imageData.split(',')[1];
         
         const prompt = context === 'scan' 
-            ? `Analyze this medicine image and provide:
-               1. Medicine name (most important)
-               2. Expiry date if visible
-               3. Active ingredients list
-               4. Basic warnings (e.g., "Contains acetaminophen", "No alcohol")
-               5. Physical description (color, shape, markings)
-               Format as clear text with each section on new line.`
-            : `Analyze this medicine image for comparison. Extract:
-               Medicine name and active ingredients only.`;
+            ? `You are a medicine identification assistant. Analyze this medicine image and provide EXACTLY this information:
+               1. Medicine name (what is this medicine?)
+               2. Expiry date if visible (format as DD/MM/YYYY or "Not visible")
+               3. Active ingredients list (main ingredients)
+               4. Basic warnings (e.g., "Contains acetaminophen", "No alcohol", "May cause drowsiness")
+               5. Physical description (color, shape, markings, bottle type)
+               
+               Format your response clearly with each section on a new line starting with the number.`
+            : `Analyze this medicine image for comparison. Extract the medicine name and active ingredients only.`;
 
         try {
-            const response = await fetch(`${this.API_URL}?key=${this.API_KEY}`, {
+            console.log('Sending to Groq...');
+            this.voiceStatus.textContent = "🔍 Analyzing with Groq...";
+            
+            const response = await fetch(this.API_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.API_KEY}`
+                },
                 body: JSON.stringify({
-                    contents: [{
-                        parts: [
-                            { text: prompt },
-                            { inline_data: { mime_type: "image/jpeg", data: base64Image } }
-                        ]
-                    }]
+                    model: this.VISION_MODEL,
+                    messages: [
+                        {
+                            role: "user",
+                            content: [
+                                {
+                                    type: "text",
+                                    text: prompt
+                                },
+                                {
+                                    type: "image_url",
+                                    image_url: {
+                                        url: `data:image/jpeg;base64,${base64Image}`
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    temperature: 0.3,
+                    max_tokens: 1024
                 })
             });
 
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Groq API error:', response.status, errorText);
+                throw new Error(`API error: ${response.status}`);
+            }
+
             const data = await response.json();
-            return data.candidates[0].content.parts[0].text;
+            console.log('Groq response:', data);
+            
+            if (!data.choices || !data.choices[0]) {
+                throw new Error('Invalid response format');
+            }
+            
+            return data.choices[0].message.content;
+            
         } catch (error) {
-            return "Error analyzing image. Please try again.";
+            console.error('Groq analysis error:', error);
+            return `Error analyzing image: ${error.message}. Please try again.`;
         }
     }
 
     async captureAndAnalyze(mode = 'scan') {
-        this.voiceStatus.textContent = "📸 Analyzing medicine...";
-        const imageData = await this.captureImage();
-        const analysis = await this.analyzeMedicine(imageData, mode);
-        
-        // Parse and store medicine info
-        const medicineInfo = this.parseMedicineInfo(analysis);
-        
-        if (mode === 'scan') {
-            this.medicines.current = medicineInfo;
-            this.displayResults(analysis);
-            this.saveToHistory(medicineInfo);
+        try {
+            this.voiceStatus.textContent = "📸 Capturing image...";
+            const imageData = await this.captureImage();
             
-            // Check expiry (Feature 15)
-            if (medicineInfo.expiry && this.isExpired(medicineInfo.expiry)) {
-                this.showEmergency('⚠️ EXPIRED MEDICINE - DO NOT TAKE');
+            this.voiceStatus.textContent = "🔍 Analyzing with Groq...";
+            const analysis = await this.analyzeMedicine(imageData, mode);
+            
+            // Parse and store medicine info
+            const medicineInfo = this.parseMedicineInfo(analysis);
+            
+            if (mode === 'scan') {
+                this.medicines.current = medicineInfo;
+                this.displayResults(analysis);
+                this.saveToHistory(medicineInfo);
+                
+                // Check expiry (Feature 15)
+                if (medicineInfo.expiry && this.isExpired(medicineInfo.expiry)) {
+                    this.showEmergency('⚠️ EXPIRED MEDICINE - DO NOT TAKE');
+                }
+                
+                // Speak the result
+                this.speak(`Analysis complete. ${medicineInfo.name}`);
             }
+            
+            return medicineInfo;
+            
+        } catch (error) {
+            console.error('Capture error:', error);
+            this.displayResults(`Error: ${error.message}`);
         }
-        
-        return medicineInfo;
     }
 
     parseMedicineInfo(analysis) {
-        // Simple parsing - in real app, use more robust parsing
+        // Simple parsing
         return {
-            name: analysis.match(/name:?(.+)/i)?.[1]?.trim() || 'Unknown',
-            expiry: analysis.match(/expir?y:?(.+)/i)?.[1]?.trim() || null,
-            ingredients: analysis.match(/ingredients?:?(.+)/i)?.[1]?.trim() || '',
-            warnings: analysis.match(/warnings?:?(.+)/i)?.[1]?.trim() || '',
-            description: analysis.match(/description?:?(.+)/i)?.[1]?.trim() || ''
+            name: this.extractField(analysis, 1) || 'Unknown',
+            expiry: this.extractField(analysis, 2) || null,
+            ingredients: this.extractField(analysis, 3) || '',
+            warnings: this.extractField(analysis, 4) || '',
+            description: this.extractField(analysis, 5) || ''
         };
+    }
+
+    extractField(text, fieldNumber) {
+        const patterns = [
+            new RegExp(`${fieldNumber}\\.?\\s*([^\\n]+)`),  // "1. Medicine name"
+            new RegExp(`${fieldNumber}[:\\)]\\s*([^\\n]+)`, 'i'), // "1: Name" or "1) Name"
+        ];
+        
+        for (const pattern of patterns) {
+            const match = text.match(pattern);
+            if (match) return match[1].trim();
+        }
+        return null;
     }
 
     // ============== INTERACTIONS (Features 6-9) ==============
@@ -203,38 +295,45 @@ class SightSage {
                        Medicine 2: ${JSON.stringify(this.medicines.compare2)}
                        
                        Provide:
-                       1. Shared ingredients (Feature 7)
-                       2. Interaction warning level: Critical vs Caution vs Safe (Feature 8)
-                       3. Simple advice like "Take 4 hours apart" (Feature 9)
+                       1. Shared ingredients
+                       2. Interaction warning level: Critical vs Caution vs Safe
+                       3. Simple advice like "Take 4 hours apart"
                        4. Overall safety assessment`;
 
         try {
-            const response = await fetch(`${this.API_URL}?key=${this.API_KEY}`, {
+            const response = await fetch(this.API_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.API_KEY}`
+                },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }]
+                    model: this.TEXT_MODEL,
+                    messages: [
+                        { role: "user", content: prompt }
+                    ],
+                    temperature: 0.3,
+                    max_tokens: 1024
                 })
             });
 
             const data = await response.json();
-            const comparison = data.candidates[0].content.parts[0].text;
+            const comparison = data.choices[0].message.content;
             
-            this.comparisonResults.innerHTML = comparison;
+            this.comparisonResults.innerHTML = comparison.replace(/\n/g, '<br>');
             this.comparisonResults.classList.remove('hidden');
             
-            // Check for critical interaction (Feature 16)
             if (comparison.toLowerCase().includes('critical')) {
                 this.showEmergency('⚠️ CRITICAL INTERACTION DETECTED');
             }
             
-            this.speak(comparison);
+            this.speak("Comparison complete. " + comparison.substring(0, 100));
         } catch (error) {
             this.comparisonResults.innerHTML = "Error comparing medicines";
         }
     }
 
-    // ============== VOICE FUNCTIONS (Features 10-14) ==============
+    // ============== VOICE FUNCTIONS ==============
     initializeVoiceCommands() {
         if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
             this.voiceStatus.textContent = "Voice not supported in this browser";
@@ -250,7 +349,6 @@ class SightSage {
             const command = event.results[event.results.length - 1][0].transcript.toLowerCase();
             this.voiceStatus.textContent = `Heard: "${command}"`;
             
-            // Voice commands
             if (command.includes('scan this') || command.includes('scan')) {
                 this.captureAndAnalyze('scan');
             } else if (command.includes('compare these') || command.includes('compare')) {
@@ -276,7 +374,7 @@ class SightSage {
             setTimeout(() => {
                 this.recognition.stop();
                 this.voiceStatus.textContent = "Voice mode ready";
-            }, 10000); // Listen for 10 seconds
+            }, 10000);
         } catch (e) {
             this.voiceStatus.textContent = "Click 'Type' to ask questions";
         }
@@ -286,7 +384,7 @@ class SightSage {
         if (!text) return;
         
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = this.voiceSpeed; // Feature 24
+        utterance.rate = this.voiceSpeed;
         utterance.pitch = 1;
         utterance.volume = 1;
         
@@ -315,16 +413,24 @@ class SightSage {
                        Provide a clear, simple answer focusing on safety.`;
 
         try {
-            const response = await fetch(`${this.API_URL}?key=${this.API_KEY}`, {
+            const response = await fetch(this.API_URL, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.API_KEY}`
+                },
                 body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }]
+                    model: this.TEXT_MODEL,
+                    messages: [
+                        { role: "user", content: prompt }
+                    ],
+                    temperature: 0.3,
+                    max_tokens: 1024
                 })
             });
 
             const data = await response.json();
-            const answer = data.candidates[0].content.parts[0].text;
+            const answer = data.choices[0].message.content;
             
             this.displayResults(answer);
             this.speak(answer);
@@ -335,7 +441,7 @@ class SightSage {
         }
     }
 
-    // ============== EMERGENCY FUNCTIONS (Features 15-18) ==============
+    // ============== EMERGENCY FUNCTIONS ==============
     detectTripleTap() {
         this.sosTapCount++;
         
@@ -356,14 +462,12 @@ class SightSage {
         const sosInfo = document.getElementById('sosWarning');
         sosInfo.classList.remove('hidden');
         
-        // Gather emergency info (Feature 18)
-        let emergencyText = "EMERGENCY - Current Medicines:\n";
+        let emergencyText = "🚨 EMERGENCY - Current Medicines:\n";
         
         if (this.medicines.current) {
             emergencyText += `Current: ${this.medicines.current.name}\n`;
         }
         
-        // Get from cabinet
         const cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
         cabinet.forEach(med => {
             emergencyText += `${med.name} (${med.expiry || 'No expiry'})\n`;
@@ -384,25 +488,23 @@ class SightSage {
     }
 
     isExpired(expiryDate) {
-        // Simple expiry check - can be enhanced
-        if (!expiryDate) return false;
+        if (!expiryDate || expiryDate === 'Not visible') return false;
         const expDate = new Date(expiryDate);
         const today = new Date();
         return expDate < today;
     }
 
-    // ============== HISTORY & CABINET (Features 19-21) ==============
+    // ============== HISTORY & CABINET ==============
     saveToHistory(medicine) {
         let cabinet = JSON.parse(localStorage.getItem('medicineCabinet') || '[]');
         
-        // Add to front, keep last 5 (Feature 19)
         cabinet.unshift({
             ...medicine,
             scannedAt: new Date().toISOString(),
             expired: medicine.expiry ? this.isExpired(medicine.expiry) : false
         });
         
-        cabinet = cabinet.slice(0, 5); // Keep only 5
+        cabinet = cabinet.slice(0, 5);
         
         localStorage.setItem('medicineCabinet', JSON.stringify(cabinet));
         this.displayCabinet();
@@ -455,7 +557,7 @@ class SightSage {
         }
     }
 
-    // ============== ACCESSIBILITY (Features 22-24) ==============
+    // ============== ACCESSIBILITY ==============
     toggleHighContrast() {
         document.body.classList.toggle('high-contrast');
         localStorage.setItem('highContrast', document.body.classList.contains('high-contrast'));
@@ -486,5 +588,6 @@ class SightSage {
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, starting app...');
     window.app = new SightSage();
 });
