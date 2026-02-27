@@ -386,21 +386,37 @@ Important: Please write naturally like you're speaking to someone, not as a list
     extractMedicineName(analysis) {
         if (!analysis) return null;
         
-        // Look for medicine name patterns - more specific
+        // Look for medicine name patterns
         const patterns = [
-            /(?:medicine|called|name(?:\s+is)?)[\s:]+([A-Z][a-z]+(?:[\s-][A-Z][a-z]+)*)/i,
-            /this (?:is|medicine is) ([A-Z][a-z]+(?:[\s-][A-Z][a-z]+)*)/i,
-            /^([A-Z][a-z]+(?:[\s-][A-Z][a-z]+)*)/  // Only if it starts with capital letters
+            // "called [Name]" or "name is [Name]"
+            /(?:called|name(?:\s+is)?)\s+([A-Z][a-zA-Z]+(?:[-\s][A-Z][a-zA-Z]+)*)/i,
+            
+            // "This is [Name]" or "This medicine is [Name]"
+            /this\s+(?:is|medicine\s+is)\s+([A-Z][a-zA-Z]+(?:[-\s][A-Z][a-zA-Z]+)*)/i,
+            
+            // "[Name] is used" at start
+            /^([A-Z][a-zA-Z]+(?:[-\s][A-Z][a-zA-Z]+)*)\s+is\s+used/i
         ];
         
         for (const pattern of patterns) {
             const match = analysis.match(pattern);
             if (match && match[1]) {
                 let name = match[1].trim();
-                // Validate it looks like a medicine name (not too long, not common words)
-                if (name.length < 30 && !name.match(/^(this|the|your|please|here|what|when|how)$/i)) {
+                // Basic validation - not too long, not common words
+                if (name.length >= 2 && name.length <= 30 && 
+                    !name.match(/^(this|that|these|those|your|please|hello|thank)$/i)) {
                     return name;
                 }
+            }
+        }
+        
+        // If no pattern matches, take first capitalized word that's not common
+        const words = analysis.split(' ');
+        for (let i = 0; i < Math.min(3, words.length); i++) {
+            const word = words[i].replace(/[^A-Za-z]/g, '');
+            if (word.length >= 3 && /^[A-Z][a-z]+$/.test(word) &&
+                !word.match(/^(This|That|These|Those|Your|Please|Hello|Thank|Would|Should|Could|Have|With|From)$/)) {
+                return word;
             }
         }
         
@@ -410,45 +426,32 @@ Important: Please write naturally like you're speaking to someone, not as a list
     extractMedicineUse(analysis) {
         if (!analysis) return null;
         
-        // Look for what it's used for - more specific
-        const patterns = [
-            /used (?:for|to treat|to help|to manage) ([^\.]+)/i,
-            /treats? ([^\.]+)/i,
-            /for (?:treating|managing|helping with) ([^\.]+)/i,
-            /helps (?:with|to) ([^\.]+)/i
-        ];
-        
-        for (const pattern of patterns) {
-            const match = analysis.match(pattern);
-            if (match && match[1]) {
-                let use = match[1].trim();
-                // Clean up and validate
-                use = use.replace(/^(?:to|with|for|a|an|the)\s+/i, '').trim();
+        // Split into sentences and look for usage description
+        const sentences = analysis.split(/[.!?]/);
+        for (const sentence of sentences) {
+            const lowerSentence = sentence.toLowerCase().trim();
+            if (lowerSentence.includes('used for') || 
+                lowerSentence.includes('treats') ||
+                lowerSentence.includes('helps') ||
+                lowerSentence.includes('for treating') ||
+                lowerSentence.includes('to treat')) {
                 
-                // Make sure it's not too short or just common words
-                if (use.length > 5 && !use.match(/^(this|that|these|those|here|there)$/i)) {
+                let use = sentence.trim();
+                // Extract just the key part after the keywords
+                use = use.replace(/^(.*?(?:used for|treats|helps|for treating|to treat|for))/, '').trim();
+                
+                // Clean up any remaining prefixes
+                use = use.replace(/^(a|an|the|this|that)\s+/i, '').trim();
+                
+                // Take only up to first comma or 'and' for brevity
+                use = use.split(/,| and /)[0].trim();
+                
+                if (use.length > 3 && use.length < 80) {
                     // Capitalize first letter
                     use = use.charAt(0).toUpperCase() + use.slice(1);
                     if (use.length > 50) {
                         use = use.substring(0, 47) + '...';
                     }
-                    return use;
-                }
-            }
-        }
-        
-        // If no pattern matches, look for the first sentence that might describe usage
-        const sentences = analysis.split(/[.!?]/);
-        for (const sentence of sentences) {
-            if (sentence.toLowerCase().includes('used for') || 
-                sentence.toLowerCase().includes('treats') ||
-                sentence.toLowerCase().includes('helps')) {
-                let use = sentence.trim();
-                // Extract just the key part
-                use = use.replace(/^(.*?(?:used for|treats|helps|for))/, '').trim();
-                if (use.length > 5 && use.length < 100) {
-                    use = use.charAt(0).toUpperCase() + use.slice(1);
-                    if (use.length > 50) use = use.substring(0, 47) + '...';
                     return use;
                 }
             }
