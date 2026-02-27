@@ -396,6 +396,34 @@ Important: Please write naturally like you're speaking to someone, not as a list
     extractMedicineName(analysis) {
         if (!analysis) return null;
         
+        // Check if AI is saying it can't see the medicine clearly
+        const unclearPatterns = [
+            "can't see",
+            "cannot see",
+            "trouble seeing",
+            "unable to see",
+            "not clear",
+            "blurry",
+            "can't tell",
+            "cannot tell",
+            "hard to see",
+            "difficult to see",
+            "can't make out",
+            "cannot make out",
+            "not visible",
+            "can't read",
+            "cannot read",
+            "unreadable",
+            "not legible"
+        ];
+        
+        const lowerAnalysis = analysis.toLowerCase();
+        for (const pattern of unclearPatterns) {
+            if (lowerAnalysis.includes(pattern)) {
+                return "[Image unclear - can't read medicine name]";
+            }
+        }
+        
         // Look for the first sentence that mentions the product
         const lines = analysis.split('\n');
         for (const line of lines) {
@@ -436,9 +464,35 @@ Important: Please write naturally like you're speaking to someone, not as a list
     extractMedicineUse(analysis) {
         if (!analysis) return null;
         
-        // Convert to lowercase for searching
-        const lowerAnalysis = analysis.toLowerCase();
+        // Check if AI is saying it can't see the medicine clearly
+        const unclearPatterns = [
+            "can't see",
+            "cannot see",
+            "trouble seeing",
+            "unable to see",
+            "not clear",
+            "blurry",
+            "can't tell",
+            "cannot tell",
+            "hard to see",
+            "difficult to see",
+            "can't make out",
+            "cannot make out",
+            "not visible",
+            "can't read",
+            "cannot read",
+            "unreadable",
+            "not legible"
+        ];
         
+        const lowerAnalysis = analysis.toLowerCase();
+        for (const pattern of unclearPatterns) {
+            if (lowerAnalysis.includes(pattern)) {
+                return "[Image unclear - can't determine usage]";
+            }
+        }
+        
+        // Convert to lowercase for searching
         // Keywords to look for
         const keywords = [
             'used to treat',
