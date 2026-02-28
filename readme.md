@@ -22,8 +22,7 @@
 - **Interaction Detection** – Compares two medicines for conflicts with clear **YES/NO** answers  
 - **Risk Assessment** – HIGH / MEDIUM / CAUTION / SAFE warnings with detailed explanations  
 - **Clinical Reasoning** – Explains *why* medicines interact and *what happens* physiologically  
-- **Actionable Advice** – Specific guidance on timing, food restrictions, and doctor consultation  
-- **Emergency Protocol** – Clear instructions with country-specific emergency numbers (108 India / 911 US)  
+- **Actionable Advice** – Specific guidance on timing, food restrictions, and doctor consultation   
 
 ### Voice-First Interface  
 - **Voice Commands** – "Scan this", "Read warnings", "Compare medicines"  
@@ -34,8 +33,9 @@
 ### Emergency Features  
 - **SOS Button** – One-tap emergency access  
 - **Triple-Tap Detection** – Tap anywhere 3x for emergency mode  
-- **Medicine History** – Shows recent medicines with expiry status  
-- **Emergency Report** – Ready-to-show doctor with medicine list + timestamp + "Bring actual medicine packets" reminder  
+- **Medicine History** – Shows recent medicines with expiry status   
+- **Emergency Report** – Ready-to-show doctor with medicine list + timestamp + "Bring actual medicine packets" reminder
+- **Emergency Protocol** – Clear instructions with country-specific emergency numbers (108 India / 911 US)   
 
 ### Medicine Cabinet  
 - **Auto-History** – Last 10 medicines saved to localStorage  
@@ -187,7 +187,7 @@ sightsage/
 
 ## GitHub Repository  
 
-**Source Code:** [https://github.com/yourusername/sightsage](https://github.com/yourusername/sightsage)  
+**Source Code:** https://github.com/Ammu1pillai/sightsage.git 
 
 ## Important Notes  
 
