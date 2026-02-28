@@ -680,25 +680,21 @@ RULES:
         
         // Look for expiry date in various formats
         const patterns = [
-            // "EXPIRY DATE: 12/2025" or "EXPIRY DATE: 31/12/2025"
-            /expiry\s*date:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-            /expiry\s*date:?\s*(\d{1,2}[-/]\d{2,4})/i, // For MM/YYYY
+            // "EXPIRY DATE: 12/2020" - THIS IS THE FORMAT WE NEED
+            /expiry\s*date:?\s*(\d{1,2}[-/]\d{2,4})/i,
             
-            // "EXP: 12/2025" or "EXP: 31/12/2025"
-            /exp:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+            // "EXPIRY DATE: 31/12/2020" 
+            /expiry\s*date:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
+            
+            // "EXP: 12/2020"
             /exp:?\s*(\d{1,2}[-/]\d{2,4})/i,
             
-            // "Use by: 12/2025"
-            /use by:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-            /use by:?\s*(\d{1,2}[-/]\d{2,4})/i,
+            // "EXP: 31/12/2020"
+            /exp:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
             
-            // "Best before: 12/2025"
-            /best before:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-            /best before:?\s*(\d{1,2}[-/]\d{2,4})/i,
-            
-            // Just a date that might be expiry
-            /(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/,
-            /(\d{1,2}[-/]\d{2,4})/
+            // The warning line format
+            /expired on\s*(\d{1,2}[-/]\d{2,4})/i,
+            /expired on\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i
         ];
         
         for (const pattern of patterns) {
@@ -714,6 +710,7 @@ RULES:
                     // Get last day of the month (28/29/30/31)
                     const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
                     date = `${lastDay}/${month}/${year}`; // Format: DD/MM/YYYY
+                    console.log('🔍 Converted MM/YYYY to:', date);
                 }
                 
                 return date;
