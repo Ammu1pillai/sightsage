@@ -482,6 +482,7 @@ RULES:
         
         const name = this.extractMedicineName(analysis);
         const description = this.extractMedicineUse(analysis);
+        const expiry = this.extractExpiryDate(analysis)
         
         return {
             name: name || 'Unknown',
