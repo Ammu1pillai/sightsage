@@ -77,10 +77,13 @@ http://localhost:8000
 
 ### Screenshots
 
-![Medicine Scan Interface]https://drive.google.com/file/d/16hdiKDGEl5euUNcv73T7er_TaNdiuh8V/view?usp=sharing
+[Main Front Page]https://drive.google.com/file/d/16hdiKDGEl5euUNcv73T7er_TaNdiuh8V/view?usp=sharing
+*Main page showing the UI interface 
+
+[Medicine Scan Interface]https://drive.google.com/file/d/1XZ9SB-vcaVXvLYSgcLizJAjXiZ2XsyEO/view?usp=drive_link
 *Main scanning interface showing camera view with medicine detection and voice command button*
 
-![Accessibility Controls]https://drive.google.com/file/d/1rtSF_kJjAEGU8Xh5JCsCaoBLs571HNc5/view?usp=sharing
+[Accessibility Controls]https://drive.google.com/file/d/1rtSF_kJjAEGU8Xh5JCsCaoBLs571HNc5/view?usp=sharing
 *Accessibility panel with high contrast mode, large text toggle, and voice speed controls*
 
 ### Diagrams
@@ -88,59 +91,14 @@ http://localhost:8000
 #### System Architecture
 
 ```
-┌─────────────┐     ┌──────────────┐     ┌─────────────┐     ┌──────────────┐
-│   Camera    │────▶│  Canvas      │────▶│   Groq API  │────▶│ Llama 4 Scout│
-│  (WebRTC)   │     │  Capture     │     │  Endpoint   │     │  17B Model   │
-└─────────────┘     └──────────────┘     └─────────────┘     └──────────────┘
-                                                                    │
-┌─────────────┐     ┌──────────────┐     ┌─────────────┐           ▼
-│   Voice     │◀────│   Speech     │     │   Result    │     ┌──────────────┐
-│   Output    │     │  Synthesis   │◀────│ Processing  │◀────│   AI Response│
-└─────────────┘     └──────────────┘     └─────────────┘     └──────────────┘
-       ▲                    ▲                   │                    │
-       │                    │                   │                    │
-┌──────┴──────┐     ┌───────┴───────┐     ┌────┴────┐     ┌───────┴───────┐
-│   Voice     │     │  localStorage  │     │Medicine │     │   Expiry      │
-│   Input     │     │   Cabinet      │     │Compare  │     │   Detection   │
-└─────────────┘     └───────────────┘     └─────────┘     └───────────────┘
-```
+https://drive.google.com/file/d/1GM2a_cf6Wy8GZaIMn2GRmcAxRh__3lek/view?usp=sharing
 
 *Architecture Diagram: The system captures camera frames, sends them to Groq's Llama 4 Scout for analysis, processes the response for expiry detection and interaction checking, stores history in localStorage, and provides voice feedback through Web Speech API*
 
 #### Application Workflow
 
 ```
-┌─────────────┐
-│   Start     │
-└──────┬──────┘
-       ▼
-┌─────────────┐     ┌─────────────────┐
-│ Voice       │────▶│ "Scan this"     │
-│ Command     │     │ Command Detected│
-└─────────────┘     └────────┬────────┘
-       ▲                     ▼
-       │              ┌─────────────┐
-       │              │ Open Camera │
-       │              └──────┬──────┘
-┌─────────────┐              ▼
-│"Read aloud" │       ┌─────────────┐
-│   Results   │◀──────│ Capture &   │
-└─────────────┘       │ Send Frame  │
-       ▲              └──────┬──────┘
-       │                     ▼
-┌─────────────┐       ┌─────────────┐
-│ Process &   │       │ Groq API    │
-│ Store in    │◀──────│ Response    │
-│ Cabinet     │       │             │
-└─────────────┘       └─────────────┘
-       │                     ▲
-       ▼                     │
-┌─────────────┐       ┌─────────────┐
-│ Check       │       │ Expired?    │
-│ Interaction?│──────▶│ Show Warning│
-└─────────────┘       └─────────────┘
-```
-
+https://drive.google.com/file/d/1ubKzJD9l8gxD37SQGTjL4FLQBKN2jho_/view?usp=drive_link
 *Workflow: User gives voice command → Camera opens and captures image → Frame sent to Groq API → AI analyzes and returns medicine details → System checks expiry and shows warnings → Results stored in cabinet → Voice reads aloud results*
 
 ### API Documentation
@@ -201,7 +159,7 @@ Content-Type: application/json
 ### Project Demo
 
 #### Video
-[Add your demo video link here - YouTube, Google Drive, etc.]
+(https://drive.google.com/file/d/1DtjYuM8YVGnk3qZ0OVzmhw7mPuoAsYCB/view?usp=drive_link)
 
 *The video demonstrates the complete user journey: opening the app, using voice commands to scan a medicine, receiving expiry warnings, comparing two medicines for interactions, and accessing the emergency SOS feature. It highlights the voice-first interface and accessibility features throughout.*
 
