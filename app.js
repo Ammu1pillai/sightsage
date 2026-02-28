@@ -1115,15 +1115,6 @@ Provide a clear, simple answer focusing on safety.`;
     
     // ============== UTILITY FUNCTIONS ==============
 
-    isExpired(expiryDate) {
-        if (!expiryDate || expiryDate === 'Not visible') return false;
-        // FIX: safely parse DD/MM/YYYY
-        const parts = expiryDate.split('/');
-        if (parts.length !== 3) return false;
-        const [day, month, year] = parts;
-        const expDate = new Date(`${year}-${month}-${day}`);
-        return !isNaN(expDate.getTime()) && expDate < new Date();
-    }
     
     displayResults(text) {
         if (this.scanResults) {
