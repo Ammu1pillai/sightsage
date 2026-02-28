@@ -440,6 +440,9 @@ RULES:
             const medicineInfo = this.parseMedicineInfo(analysis);
             this.medicines.current = medicineInfo;
             this.saveToHistory(medicineInfo);
+
+            console.log('🔍 Expiry date extracted:', medicineInfo.expiry);
+            console.log('🔍 Is expired?', medicineInfo.expiry ? this.isExpired(medicineInfo.expiry) : 'no expiry');
             
             if (medicineInfo.expiry && this.isExpired(medicineInfo.expiry)) {
                 this.showEmergency('⚠️ EXPIRED MEDICINE - DO NOT TAKE');
@@ -705,9 +708,12 @@ RULES:
                 // Convert various separators to /
                 date = date.replace(/[.-]/g, '/');
                 
-                // If it's just MM/YYYY, add a day
+                // If it's just MM/YYYY, set to last day of month for expiry comparison
                 if (date.match(/^\d{1,2}\/\d{4}$/)) {
-                    date = `01/${date}`; // Assume first day of month
+                    const [month, year] = date.split('/');
+                    // Get last day of the month (28/29/30/31)
+                    const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+                    date = `${lastDay}/${month}/${year}`; // Format: DD/MM/YYYY
                 }
                 
                 return date;
