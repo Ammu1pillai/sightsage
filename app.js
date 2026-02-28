@@ -482,29 +482,12 @@ Important: Please write naturally like you're speaking to someone, not as a list
         
         // Check if AI is saying it can't see the medicine clearly
         const unclearPatterns = [
-            "can't see",
-            "cannot see",
-            "trouble seeing",
-            "unable to see",
-            "not clear",
-            "blurry",
-            "can't tell",
-            "cannot tell",
-            "hard to see",
-            "difficult to see",
-            "can't make out",
-            "cannot make out",
-            "not visible",
-            "can't read",
-            "cannot read",
-            "unreadable",
-            "not legible",
-            "having trouble",        // ADD THIS
-            "can't provide",         // ADD THIS
-            "don't have enough",     // ADD THIS
-            "insufficient",          // ADD THIS
-            "can't determine",       // ADD THIS
-            "unable to determine"    
+            "can't see", "cannot see", "trouble seeing", "unable to see",
+            "not clear", "blurry", "can't tell", "cannot tell",
+            "hard to see", "difficult to see", "can't make out", "cannot make out",
+            "not visible", "can't read", "cannot read", "unreadable",
+            "not legible", "having trouble", "can't provide", "don't have enough",
+            "insufficient", "can't determine", "unable to determine"
         ];
         
         const lowerAnalysis = analysis.toLowerCase();
@@ -514,36 +497,13 @@ Important: Please write naturally like you're speaking to someone, not as a list
             }
         }
         
-        // Look for the first sentence that mentions the product
-        const lines = analysis.split('\n');
-        for (const line of lines) {
-            // Look for patterns like "I see you're looking at a product called 'X'" or similar
-            const match = line.match(/called ["']?([^"'.]+)["']?/i) || 
-                        line.match(/product called ["']?([^"'.]+)["']?/i) ||
-                        line.match(/["']([^"']+)["']/);
-            if (match) {
-                return match[1].trim();
-            }
-        }
-        
-        // If no quotes/called pattern, try to find a capitalized product name
-        const words = analysis.split(' ');
-        for (let i = 0; i < Math.min(10, words.length); i++) {
-            const word = words[i].replace(/[^A-Za-z&]/g, '');
-            // Look for words with multiple capitals (like "Gentamicin & Betamethasone")
-            if (word.includes('&') || (word.length > 5 && /^[A-Z][a-z]+$/.test(word))) {
-                // Take the next few words as well
-                let name = word;
-                for (let j = 1; j <= 3; j++) {
-                    if (i + j < words.length) {
-                        const next = words[i + j].replace(/[^A-Za-z&]/g, '');
-                        if (next.length > 2) {
-                            name += ' ' + next;
-                        } else {
-                            break;
-                        }
-                    }
-                }
+        // Look for MEDICINE NAME: label
+        const nameMatch = analysis.match(/MEDICINE NAME:\s*([^\n]+)/i);
+        if (nameMatch && nameMatch[1]) {
+            let name = nameMatch[1].trim();
+            // Remove any trailing punctuation
+            name = name.replace(/[.,;:]+$/, '').trim();
+            if (name && name.length > 1) {
                 return name;
             }
         }
@@ -556,29 +516,12 @@ Important: Please write naturally like you're speaking to someone, not as a list
         
         // Check if AI is saying it can't see the medicine clearly
         const unclearPatterns = [
-            "can't see",
-            "cannot see",
-            "trouble seeing",
-            "unable to see",
-            "not clear",
-            "blurry",
-            "can't tell",
-            "cannot tell",
-            "hard to see",
-            "difficult to see",
-            "can't make out",
-            "cannot make out",
-            "not visible",
-            "can't read",
-            "cannot read",
-            "unreadable",
-            "not legible",
-            "having trouble",        // ADD THIS
-            "can't provide",         // ADD THIS
-            "don't have enough",     // ADD THIS
-            "insufficient",          // ADD THIS
-            "can't determine",       // ADD THIS
-            "unable to determine"    
+            "can't see", "cannot see", "trouble seeing", "unable to see",
+            "not clear", "blurry", "can't tell", "cannot tell",
+            "hard to see", "difficult to see", "can't make out", "cannot make out",
+            "not visible", "can't read", "cannot read", "unreadable",
+            "not legible", "having trouble", "can't provide", "don't have enough",
+            "insufficient", "can't determine", "unable to determine"
         ];
         
         const lowerAnalysis = analysis.toLowerCase();
@@ -588,50 +531,22 @@ Important: Please write naturally like you're speaking to someone, not as a list
             }
         }
         
-        // Convert to lowercase for searching
-        // Keywords to look for
-        const keywords = [
-            'used to treat',
-            'used for',
-            'used to',
-            'treats',
-            'treating',
-            'for treating',
-            'to treat',
-            'helps with',
-            'helps to',
-            'works by',
-            'prevents',
-            'protects against',
-            'repels',
-            'relieves',
-            'reduces',
-            'controls',
-            'manages'
-        ];
-        
-        for (const keyword of keywords) {
-            const keywordIndex = lowerAnalysis.indexOf(keyword);
-            if (keywordIndex !== -1) {
-                // Find the full stop after the keyword
-                const afterKeyword = analysis.substring(keywordIndex + keyword.length);
-                const fullStopIndex = afterKeyword.indexOf('.');
-                
-                if (fullStopIndex !== -1) {
-                    // Extract text from after keyword until the full stop
-                    let use = afterKeyword.substring(0, fullStopIndex).trim();
-                    
-                    // Clean up
-                    use = use.replace(/^[:\s-]+/, '')  // Remove leading punctuation
-                            .replace(/[,\s]+$/, '')    // Remove trailing commas
-                            .trim();
-                    
-                    if (use && use.length > 2) {
-                        // Capitalize first letter
-                        use = use.charAt(0).toUpperCase() + use.slice(1);
-                        return use;
-                    }
+        // Look for USES: label
+        const usesMatch = analysis.match(/USES:\s*([^\n]+)/i);
+        if (usesMatch && usesMatch[1]) {
+            let use = usesMatch[1].trim();
+            // Remove common prefixes like "It's used for" or "it is used for"
+            use = use.replace(/^(?:it['']?s|it is)\s+(?:used\s+)?(?:for|to\s+treat)?\s*/i, '');
+            // Remove any trailing punctuation
+            use = use.replace(/[.,;:]+$/, '').trim();
+            
+            if (use && use.length > 2) {
+                // Capitalize first letter
+                use = use.charAt(0).toUpperCase() + use.slice(1);
+                if (use.length > 60) {
+                    use = use.substring(0, 57) + '...';
                 }
+                return use;
             }
         }
         
