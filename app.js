@@ -489,7 +489,18 @@ RULES:
     extractMedicineName(analysis) {
         if (!analysis) return null;
         
-        // Check if AI is saying it can't see the medicine clearly
+        // FIRST: Look for MEDICINE NAME: label (this is our primary method)
+        const nameMatch = analysis.match(/MEDICINE NAME:\s*([^\n]+)/i);
+        if (nameMatch && nameMatch[1]) {
+            let name = nameMatch[1].trim();
+            // Remove any trailing punctuation
+            name = name.replace(/[.,;:]+$/, '').trim();
+            if (name && name.length > 1 && name !== "Not visible" && name !== "Not clearly visible") {
+                return name;
+            }
+        }
+        
+        // ONLY if we couldn't find a name with the label, check for unclear patterns
         const unclearPatterns = [
             "can't see", "cannot see", "trouble seeing", "unable to see",
             "not clear", "blurry", "can't tell", "cannot tell",
@@ -506,24 +517,32 @@ RULES:
             }
         }
         
-        // Look for MEDICINE NAME: label
-        const nameMatch = analysis.match(/MEDICINE NAME:\s*([^\n]+)/i);
-        if (nameMatch && nameMatch[1]) {
-            let name = nameMatch[1].trim();
-            // Remove any trailing punctuation
-            name = name.replace(/[.,;:]+$/, '').trim();
-            if (name && name.length > 1) {
-                return name;
-            }
-        }
-        
         return null;
     }
 
     extractMedicineUse(analysis) {
         if (!analysis) return null;
         
-        // Check if AI is saying it can't see the medicine clearly
+        // FIRST: Look for USES: label (this is our primary method)
+        const usesMatch = analysis.match(/USES:\s*([^\n]+)/i);
+        if (usesMatch && usesMatch[1]) {
+            let use = usesMatch[1].trim();
+            // Remove common prefixes like "It's used for" or "it is used for"
+            use = use.replace(/^(?:it['']?s|it is)\s+(?:used\s+)?(?:for|to\s+treat)?\s*/i, '');
+            // Remove any trailing punctuation
+            use = use.replace(/[.,;:]+$/, '').trim();
+            
+            if (use && use.length > 2 && use !== "Not visible" && use !== "Not clearly visible" && use !== "Information not available") {
+                // Capitalize first letter
+                use = use.charAt(0).toUpperCase() + use.slice(1);
+                if (use.length > 60) {
+                    use = use.substring(0, 57) + '...';
+                }
+                return use;
+            }
+        }
+        
+        // ONLY if we couldn't find a use with the label, check for unclear patterns
         const unclearPatterns = [
             "can't see", "cannot see", "trouble seeing", "unable to see",
             "not clear", "blurry", "can't tell", "cannot tell",
@@ -537,25 +556,6 @@ RULES:
         for (const pattern of unclearPatterns) {
             if (lowerAnalysis.includes(pattern)) {
                 return "[Image unclear - can't determine usage]";
-            }
-        }
-        
-        // Look for USES: label
-        const usesMatch = analysis.match(/USES:\s*([^\n]+)/i);
-        if (usesMatch && usesMatch[1]) {
-            let use = usesMatch[1].trim();
-            // Remove common prefixes like "It's used for" or "it is used for"
-            use = use.replace(/^(?:it['']?s|it is)\s+(?:used\s+)?(?:for|to\s+treat)?\s*/i, '');
-            // Remove any trailing punctuation
-            use = use.replace(/[.,;:]+$/, '').trim();
-            
-            if (use && use.length > 2) {
-                // Capitalize first letter
-                use = use.charAt(0).toUpperCase() + use.slice(1);
-                if (use.length > 60) {
-                    use = use.substring(0, 57) + '...';
-                }
-                return use;
             }
         }
         
