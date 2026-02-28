@@ -482,11 +482,12 @@ RULES:
         
         const name = this.extractMedicineName(analysis);
         const description = this.extractMedicineUse(analysis);
-        const expiry = this.extractExpiryDate(analysis)
+        const expiry = this.extractExpiryDate(analysis);
         
         return {
             name: name || 'Unknown',
-            description: description || 'Medicine information'
+            description: description || 'Medicine information',
+            expiry: expiry || null  // ✅ Add comma after description line
         };
     }
 
