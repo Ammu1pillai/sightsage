@@ -678,51 +678,49 @@ RULES:
     extractExpiryDate(text) {
         if (!text) return null;
         
-        // Look for expiry date in various formats
-        const patterns = [
-            // "EXPIRY DATE: 12/2020" - THIS IS THE FORMAT WE NEED
-            /expiry\s*date:?\s*(\d{1,2}[-/]\d{2,4})/i,
-            
-            // "EXPIRY DATE: 31/12/2020" 
-            /expiry\s*date:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-            
-            // "EXP: 12/2020"
-            /exp:?\s*(\d{1,2}[-/]\d{2,4})/i,
-            
-            // "EXP: 31/12/2020"
-            /exp:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-            
-            // The warning line format
-            /expired on\s*(\d{1,2}[-/]\d{2,4})/i,
-            /expired on\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i
-        ];
+        // Look for EXPIRY DATE: field
+        const expiryMatch = text.match(/EXPIRY DATE:\s*([^\n]+)/i);
+        if (!expiryMatch) return null;
         
-        for (const pattern of patterns) {
-            const match = text.match(pattern);
-            if (match && match[1]) {
-                let date = match[1].trim();
-                // Convert various separators to /
-                date = date.replace(/[.-]/g, '/');
-                
-                // If it's just MM/YYYY, set to last day of month for expiry comparison
-                if (date.match(/^\d{1,2}\/\d{4}$/)) {
-                    const [month, year] = date.split('/');
-                    // Get last day of the month (28/29/30/31)
-                    const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
-                    date = `${lastDay}/${month}/${year}`; // Format: DD/MM/YYYY
-                    console.log('🔍 Converted MM/YYYY to:', date);
-                }
-                
-                return date;
-            }
+        let dateStr = expiryMatch[1].trim();
+        
+        // Remove any non-date text
+        dateStr = dateStr.replace(/[^0-9\/]/g, '').trim();
+        if (!dateStr) return null;
+        
+        return dateStr; // Return as MM/YYYY or DD/MM/YYYY format
+    }
+
+    // Update isExpired to handle both formats
+    isExpired(expiryDate) {
+        if (!expiryDate || expiryDate === 'Not visible') return false;
+        
+        let day, month, year;
+        const parts = expiryDate.split('/');
+        
+        if (parts.length === 2) {
+            // Format: MM/YYYY
+            month = parseInt(parts[0]);
+            year = parseInt(parts[1]);
+            // Set to last day of month
+            day = new Date(year, month, 0).getDate();
+        } else if (parts.length === 3) {
+            // Format: DD/MM/YYYY
+            day = parseInt(parts[0]);
+            month = parseInt(parts[1]);
+            year = parseInt(parts[2]);
+        } else {
+            return false;
         }
         
-        // Check if AI explicitly said it's not visible
-        if (text.toLowerCase().includes('expiry date: not visible')) {
-            return null;
-        }
+        const expDate = new Date(year, month - 1, day);
+        const today = new Date();
         
-        return null;
+        // Reset time part for accurate date comparison
+        today.setHours(0, 0, 0, 0);
+        expDate.setHours(0, 0, 0, 0);
+        
+        return expDate < today;
     }
 
     stopCamera() {
