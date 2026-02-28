@@ -366,30 +366,44 @@ class SightSage {
     async analyzeWithGroq(imageData) {
         const base64Image = imageData.split(',')[1];
         
-        const prompt = `You are SightSage, a medicine safety assistant. Look at this medicine image.
+        const prompt =  `You are SightSage, a medicine safety assistant. Look at this medicine image and respond with ONLY the following format - no additional text, no explanations, no greetings:
 
-⚠️⚠️⚠️ ABSOLUTE CRITICAL RULE ⚠️⚠️⚠️
-If the expiry date is ANY date BEFORE today (March 2026), you MUST start your response with EXACTLY:
-"🚨 DO NOT TAKE THIS MEDICINE - IT EXPIRED ON [DATE] 🚨"
+🚨 DO NOT TAKE THIS MEDICINE - IT EXPIRED ON [DATE] 🚨
+(ONLY include this line if the medicine is expired. If not expired or expiry not visible, DO NOT include this line)
 
-This is NON-NEGOTIABLE. Even if you're unsure, if the date is in the past, you MUST give this warning first.
-
-Then provide this information:
-
-MEDICINE NAME: [exact name from packaging]
-EXPIRY DATE: [exact date if visible]
-APPEARANCE: [color, shape, markings]
-USES: [what it's used for]
-HOW TO TAKE: [with/without food]
-COMMON SIDE EFFECTS: [brief list]
-ELDERLY ADVICE: [special considerations]
+MEDICINE NAME: [exact name from packaging, or "Not visible"]
+EXPIRY DATE: [exact date if visible, or "Not visible"]
+APPEARANCE: [color, shape, markings, or "Not clearly visible"]
+USES: [what it's used for, or "Information not available"]
+HOW TO TAKE: [with/without food instructions, or "Follow doctor's advice"]
+COMMON SIDE EFFECTS: [brief list, or "Consult doctor for specific side effects"]
+ELDERLY ADVICE: [special considerations for elderly]
 HEART PATIENTS: [what heart patients should know]
 AVOID: [things to avoid]
 SAFETY TIP: [one practical tip]
 
-BE DIRECT. If the medicine is expired, WARN THE USER IMMEDIATELY.
+IMPORTANT RULES:
+1. Use EXACTLY this format with the labels as shown
+2. No text before or after these lines
+3. No explanations, no greetings, no extra sentences
+4. If expiry date is in the past, the first line MUST be the warning with the date
+5. If medicine is not expired or expiry not visible, start directly with "MEDICINE NAME:"
+6. Be direct and factual
 
-Important: Please write naturally like you're speaking to someone, not as a list with numbers. Use simple words, short sentences, and a warm tone. Avoid medical jargon unless you explain it. If you're not sure about something, be honest about it.`;
+Example format when expired:
+🚨 DO NOT TAKE THIS MEDICINE - IT EXPIRED ON MAY 2021 🚨
+MEDICINE NAME: Combiflam
+EXPIRY DATE: May 2021
+APPEARANCE: Not clearly visible
+USES: Pain relief and inflammation
+...etc...
+
+Example format when not expired:
+MEDICINE NAME: Paracetamol
+EXPIRY DATE: 12/2025
+APPEARANCE: White round tablet
+USES: Fever and pain relief
+...etc...`;
         
         try {
             const response = await fetch(this.API_URL, {
