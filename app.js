@@ -46,6 +46,8 @@ class SightSage {
         this.scanResults = document.getElementById('scanResults');
         this.voiceStatus = document.getElementById('voiceStatus');
         this.medicineCabinet = document.getElementById('medicineCabinet');
+        this.uploadBtn = document.getElementById('uploadButton');
+        this.fileInput = document.getElementById('fileInput');
         
         this.scanBtn = document.getElementById('scanButton');
         this.compareBtn = document.getElementById('compareButton');
@@ -303,8 +305,7 @@ class SightSage {
 
 IMPORTANT - Look for the expiry date. It might be labeled as "EXP", "Expiry", or a date.
 
-⚠️ CRITICAL: If the expiry date has passed, you MUST start your response with "DO NOT TAKE THIS MEDICINE - IT HAS EXPIRED" and then explain why.
-
+⚠️ CRITICAL RULE: If the expiry date has passed OR is older than today's date, your VERY FIRST WORDS MUST BE "DO NOT TAKE THIS MEDICINE - IT HAS EXPIRED". Then continue with the rest of the information.
 Provide the following information in a clear, structured way:
 
 MEDICINE NAME: [exact name from packaging]
