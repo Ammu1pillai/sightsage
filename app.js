@@ -845,7 +845,28 @@ RULES:
             const comparison = data.choices[0].message.content;
             
             if (this.comparisonResults) {
-                this.comparisonResults.innerHTML = comparison.replace(/\n/g, '<br>');
+
+                this.comparisonResults.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--card-border);">
+                        <span style="font-weight: bold; color: var(--teal-light); font-size: 1rem;">📊 Comparison Result</span>
+                        <button id="readComparisonBtn" class="speak-btn" style="padding: 5px 12px; font-size: 0.85rem; background: rgba(20,184,166,0.1); color: var(--teal-light); border: 1px solid var(--teal); border-radius: var(--r-pill); cursor: pointer;">
+                            🔊 Read Aloud
+                        </button>
+                    </div>
+                    <div id="comparisonText">${comparison.replace(/\n/g, '<br>')}</div>
+                `;
+                
+                // Add event listener to the read aloud button
+                const readComparisonBtn = document.getElementById('readComparisonBtn');
+                if (readComparisonBtn) {
+                    readComparisonBtn.onclick = () => {
+                        // Get the text content without HTML tags
+                        const comparisonText = document.getElementById('comparisonText').innerText || 
+                                            document.getElementById('comparisonText').textContent;
+                        this.speak(comparisonText);
+                    };
+                }
+                
                 this.comparisonResults.classList.remove('hidden');
             }
             
