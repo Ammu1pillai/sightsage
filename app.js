@@ -695,22 +695,32 @@ RULES:
 
     // Update isExpired to handle both formats
     isExpired(expiryDate) {
-        if (!expiryDate || expiryDate === 'Not visible') return false;
+        if (!expiryDate || expiryDate === 'Not visible') {
+            console.log('🔍 No valid expiry date'); // ADD THIS
+            return false;
+        }
+        
+        console.log('🔍 Processing expiry date:', expiryDate); // ADD THIS
         
         let day, month, year;
         const parts = expiryDate.split('/');
+        console.log('🔍 Split parts:', parts); // ADD THIS
         
         if (parts.length === 2) {
             // Format: MM/YYYY
             month = parseInt(parts[0]);
             year = parseInt(parts[1]);
+            console.log('🔍 MM/YYYY format - month:', month, 'year:', year); // ADD THIS
             day = new Date(year, month, 0).getDate();
+            console.log('🔍 Last day of month:', day); // ADD THIS
         } else if (parts.length === 3) {
             // Format: DD/MM/YYYY
             day = parseInt(parts[0]);
             month = parseInt(parts[1]);
             year = parseInt(parts[2]);
+            console.log('🔍 DD/MM/YYYY format - day:', day, 'month:', month, 'year:', year); // ADD THIS
         } else {
+            console.log('🔍 Invalid format'); // ADD THIS
             return false;
         }
         
@@ -719,7 +729,9 @@ RULES:
         today.setHours(0, 0, 0, 0);
         expDate.setHours(0, 0, 0, 0);
         
-        console.log('🔍 Comparing:', expDate.toDateString(), 'with', today.toDateString());
+        console.log('🔍 Expiry date object:', expDate.toDateString()); // ADD THIS
+        console.log('🔍 Today date object:', today.toDateString()); // ADD THIS
+        console.log('🔍 Is expired?', expDate < today); // ADD THIS
         
         return expDate < today;
     }
