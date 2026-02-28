@@ -77,13 +77,10 @@ http://localhost:8000
 
 ### Screenshots
 
-![Medicine Scan Interface](https://via.placeholder.com/800x400?text=Medicine+Scan+Interface)
+![Medicine Scan Interface]https://drive.google.com/file/d/16hdiKDGEl5euUNcv73T7er_TaNdiuh8V/view?usp=sharing
 *Main scanning interface showing camera view with medicine detection and voice command button*
 
-![Medicine Comparison Result](https://via.placeholder.com/800x400?text=Medicine+Comparison)
-*Medicine comparison feature showing interaction analysis with risk level and emergency instructions*
-
-![Accessibility Controls](https://via.placeholder.com/800x400?text=Accessibility+Settings)
+![Accessibility Controls]https://drive.google.com/file/d/1rtSF_kJjAEGU8Xh5JCsCaoBLs571HNc5/view?usp=sharing
 *Accessibility panel with high contrast mode, large text toggle, and voice speed controls*
 
 ### Diagrams
