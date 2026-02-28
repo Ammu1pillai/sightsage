@@ -414,7 +414,13 @@ Important: Please write naturally like you're speaking to someone, not as a list
             "can't read",
             "cannot read",
             "unreadable",
-            "not legible"
+            "not legible",
+            "having trouble",        // ADD THIS
+            "can't provide",         // ADD THIS
+            "don't have enough",     // ADD THIS
+            "insufficient",          // ADD THIS
+            "can't determine",       // ADD THIS
+            "unable to determine"    
         ];
         
         const lowerAnalysis = analysis.toLowerCase();
@@ -482,7 +488,13 @@ Important: Please write naturally like you're speaking to someone, not as a list
             "can't read",
             "cannot read",
             "unreadable",
-            "not legible"
+            "not legible",
+            "having trouble",        // ADD THIS
+            "can't provide",         // ADD THIS
+            "don't have enough",     // ADD THIS
+            "insufficient",          // ADD THIS
+            "can't determine",       // ADD THIS
+            "unable to determine"    
         ];
         
         const lowerAnalysis = analysis.toLowerCase();
