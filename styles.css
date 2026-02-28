@@ -562,16 +562,21 @@ body {
 }
 
 .act-btn {
-    display:flex; align-items:center; gap:10px;
+    display:flex; 
+    align-items:center; 
+    justify-content:center; /* Add this to center content */
+    gap:0; /* Remove gap since there's no icon */
     padding:16px 14px;
-    border-radius:var(--r-lg); border:none;
-    font-family:var(--font-body); cursor:pointer;
+    border-radius:var(--r-lg); 
+    border:none;
+    font-family:var(--font-body); 
+    cursor:pointer;
     transition:transform 0.18s var(--ease-spring), box-shadow 0.18s;
-    touch-action:manipulation; text-align:left;
+    touch-action:manipulation; 
+    text-align:center; /* Change to center */
 }
 .act-btn:active { transform:scale(0.93) !important; }
 
-.act-icon { font-size:1.5rem; flex-shrink:0; }
 .act-text { display:flex; flex-direction:column; }
 .act-main { font-size:0.9rem; font-weight:700; color:white; }
 .act-hint { font-size:0.72rem; opacity:0.7; color:white; margin-top:1px; }
@@ -989,7 +994,6 @@ body.large-text .hero-heading { font-size:clamp(2rem,3.5vw,3rem); }
     .action-row { grid-template-columns:1fr 1fr 1fr; }
     .act-text { display:none; }
     .act-btn { justify-content:center; }
-    .act-icon { font-size:1.6rem; }
     .stats-band { display:none; }
     .main-grid { padding:0 3vw 40px; }
     .grid-col { padding:24px 10px; }
