@@ -81,6 +81,71 @@ class SightSage {
     }
     
     setupEventListeners() {
+
+        console.log('🔍 Checking upload elements...');
+        console.log('🔍 uploadBtn:', this.uploadBtn);
+        console.log('🔍 fileInput:', this.fileInput);
+
+        if (this.uploadBtn) {
+            console.log('✅ Upload button found - attaching click handler');
+            this.uploadBtn.onclick = () => {
+                console.log('📁 Upload button CLICKED!');
+                console.log('📁 About to click file input:', this.fileInput);
+                if (this.fileInput) {
+                    this.fileInput.click();
+                    console.log('📁 Click triggered on file input');
+                } else {
+                    console.error('❌ fileInput is null!');
+                }
+            };
+        } else {
+            console.error('❌ uploadBtn is null! Check if element with id "uploadButton" exists');
+        }
+
+        if (this.fileInput) {
+            console.log('✅ File input found - attaching change handler');
+            this.fileInput.onchange = (e) => {
+                console.log('📁 File input change event triggered!');
+                console.log('📁 Event:', e);
+                console.log('📁 Files:', e.target.files);
+                const file = e.target.files[0];
+                if (file) {
+                    console.log('📁 File selected:', file.name, 'type:', file.type, 'size:', file.size);
+                    this.processUploadedFile(file);
+                } else {
+                    console.log('📁 No file selected');
+                }
+                this.fileInput.value = '';
+            };
+        } else {
+            console.error('❌ fileInput is null! Check if element with id "fileInput" exists');
+        }
+
+        if (this.scanBtn) {
+            this.scanBtn.onclick = () => {
+                console.log('📸 Scan clicked');
+                this.startCameraAndScan();
+            };
+        }
+
+         if (this.uploadBtn) {
+            this.uploadBtn.onclick = () => {
+                console.log('📁 Upload clicked');
+                this.fileInput.click();
+            };
+        }
+    
+        if (this.fileInput) {
+            this.fileInput.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    this.processUploadedFile(file);
+                }
+                // Reset file input so same file can be selected again
+                this.fileInput.value = '';
+            };
+        }
+
         if (this.scanBtn) {
             this.scanBtn.onclick = () => {
                 console.log('📸 Scan clicked');
@@ -374,6 +439,23 @@ Important: Please write naturally like you're speaking to someone, not as a list
             console.error('API error:', error);
             return `I'm sorry, I had trouble analyzing the medicine. ${error.message}`;
         }
+    }
+
+    processUploadedFile(file) {
+        this.updateStatus('📁 Processing uploaded image...');
+        
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const imageData = e.target.result;
+            this.updateStatus('🤖 Analyzing uploaded image...');
+            const analysis = await this.analyzeWithGroq(imageData);
+            this.displayResults(analysis);
+        };
+        reader.onerror = (error) => {
+            console.error('Error reading file:', error);
+            this.updateStatus('❌ Error reading file');
+        };
+        reader.readAsDataURL(file);
     }
 
     
