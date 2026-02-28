@@ -299,11 +299,11 @@ class SightSage {
     async analyzeWithGroq(imageData) {
         const base64Image = imageData.split(',')[1];
         
-        const prompt = `You are SightSage, a caring medicine assistant for elderly users. Look at this medicine image and tell me about it in a warm, natural way.
+        const prompt = `You are SightSage, a caring medicine assistant. Look at this medicine image and tell me about it.
 
-IMPORTANT - EXPIRY DATE: Look carefully at the image for any expiry date. It might be labeled as "EXP", "Expiry", "Use by", "Best before", or a date in DD/MM/YYYY or MM/YYYY format. If you see it, state it exactly as shown.
+IMPORTANT - Look for the expiry date. It might be labeled as "EXP", "Expiry", or a date.
 
-⚠️ CRITICAL WARNING: If the expiry date has passed, you MUST explicitly state "DO NOT TAKE THIS MEDICINE - IT HAS EXPIRED" in your response.
+⚠️ CRITICAL: If the expiry date has passed, you MUST start your response with "DO NOT TAKE THIS MEDICINE - IT HAS EXPIRED" and then explain why.
 
 Provide the following information in a clear, structured way:
 
