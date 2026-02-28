@@ -339,6 +339,13 @@ body {
 }
 .hbtn-ghost:hover { background:var(--teal); color:var(--bg); transform:translateY(-3px); }
 
+.medicine-desc {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin: 4px 0;
+    line-height: 1.4;
+    font-style: italic;
+}
 
 /* Text input */
 .text-panel {
@@ -562,21 +569,16 @@ body {
 }
 
 .act-btn {
-    display:flex; 
-    align-items:center; 
-    justify-content:center; /* Add this to center content */
-    gap:0; /* Remove gap since there's no icon */
+    display:flex; align-items:center; gap:10px;
     padding:16px 14px;
-    border-radius:var(--r-lg); 
-    border:none;
-    font-family:var(--font-body); 
-    cursor:pointer;
+    border-radius:var(--r-lg); border:none;
+    font-family:var(--font-body); cursor:pointer;
     transition:transform 0.18s var(--ease-spring), box-shadow 0.18s;
-    touch-action:manipulation; 
-    text-align:center; /* Change to center */
+    touch-action:manipulation; text-align:left;
 }
 .act-btn:active { transform:scale(0.93) !important; }
 
+.act-icon { font-size:1.5rem; flex-shrink:0; }
 .act-text { display:flex; flex-direction:column; }
 .act-main { font-size:0.9rem; font-weight:700; color:white; }
 .act-hint { font-size:0.72rem; opacity:0.7; color:white; margin-top:1px; }
@@ -785,62 +787,9 @@ body {
     animation: fadeUp 0.3s var(--ease-out);
 }
 
-
-.medicine-desc {
-    font-size: 0.85rem;
-    color: var(--text-dim);
-    margin: 4px 0;
-    line-height: 1.4;
-    font-style: italic;
-}
-
-.medicine-dropdown {
-    margin-top: 8px;
-}
-
-.dropdown-toggle {
-    width: 100%;
-    padding: 10px;
-    background: var(--card2);
-    border: 1px solid var(--card-border);
-    border-radius: var(--r-md);
-    color: var(--text);
-    font-family: var(--font-body);
-    font-size: 0.9rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-}
-
-.dropdown-toggle:hover {
-    background: var(--blue-glow);
-    border-color: var(--blue);
-}
-
-.dropdown-toggle.active span {
-    transform: rotate(180deg);
-}
-
-.dropdown-toggle span {
-    transition: transform 0.2s ease;
-}
-
-.dropdown-items {
-    margin-top: 8px;
-    padding-left: 12px;
-    border-left: 2px solid var(--card-border);
-}
-
-.dropdown-item {
-    margin-bottom: 8px;
-    opacity: 0.9;
-}
-
-.dropdown-item:last-child {
-    margin-bottom: 0;
+/* Hide old cabinet list */
+.cab-list {
+    display: none;
 }
 
 /* How-to card */
@@ -994,6 +943,7 @@ body.large-text .hero-heading { font-size:clamp(2rem,3.5vw,3rem); }
     .action-row { grid-template-columns:1fr 1fr 1fr; }
     .act-text { display:none; }
     .act-btn { justify-content:center; }
+    .act-icon { font-size:1.6rem; }
     .stats-band { display:none; }
     .main-grid { padding:0 3vw 40px; }
     .grid-col { padding:24px 10px; }
