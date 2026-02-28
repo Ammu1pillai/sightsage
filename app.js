@@ -527,16 +527,21 @@ RULES:
         const usesMatch = analysis.match(/USES:\s*([^\n]+)/i);
         if (usesMatch && usesMatch[1]) {
             let use = usesMatch[1].trim();
+            
             // Remove common prefixes like "It's used for" or "it is used for"
             use = use.replace(/^(?:it['']?s|it is)\s+(?:used\s+)?(?:for|to\s+treat)?\s*/i, '');
-            // Remove any trailing punctuation
+            
+            // IMPORTANT: Don't cut at commas - take everything until the end of the line or sentence
+            // The line already contains the full text until the next label
+            
+            // Remove any trailing punctuation at the VERY end only
             use = use.replace(/[.,;:]+$/, '').trim();
             
             if (use && use.length > 2 && use !== "Not visible" && use !== "Not clearly visible" && use !== "Information not available") {
                 // Capitalize first letter
                 use = use.charAt(0).toUpperCase() + use.slice(1);
-                if (use.length > 60) {
-                    use = use.substring(0, 57) + '...';
+                if (use.length > 100) { // Increased from 60 to 100
+                    use = use.substring(0, 97) + '...';
                 }
                 return use;
             }
