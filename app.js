@@ -8,7 +8,7 @@ class SightSage {
         console.log('Constructor running');
         
         // API Configuration
-        this.API_KEY = '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';
+        this.API_KEY = process.env.GROQ_API_KEY;
         this.API_URL = 'https://api.groq.com/openai/v1/chat/completions';
         this.VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
         this.TEXT_MODEL = 'llama-3.3-70b-versatile';
