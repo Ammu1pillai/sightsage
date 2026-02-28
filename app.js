@@ -10,8 +10,6 @@ class SightSage {
         console.log('Constructor running');
         
         // API Configuration
-        this.API_KEY = process.env.GROQ_API_KEY;
-        this.API_URL = 'https://api.groq.com/openai/v1/chat/completions';
         this.VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
         this.TEXT_MODEL = 'llama-3.3-70b-versatile';
         
@@ -403,11 +401,10 @@ RULES:
 5. Be helpful - users need real information, be warm!`;
         
         try {
-            const response = await fetch(this.API_URL, {
+            const response = await fetch('/api/analyze',{
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.API_KEY}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     model: this.VISION_MODEL,
@@ -829,12 +826,11 @@ RULES:
     Keep it simple and clear. No extra text, just these 5 bullet points.`;
         
         try {
-            const response = await fetch(this.API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.API_KEY}`
-                },
+            const response = await fetch('/api/analyze', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
                 body: JSON.stringify({
                     model: this.TEXT_MODEL,
                     messages: [{ role: "user", content: prompt }],
@@ -987,11 +983,10 @@ Context: ${context}
 Provide a clear, simple answer focusing on safety.`;
         
         try {
-            const response = await fetch(this.API_URL, {
+            const response = await fetch('/api/analyze', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.API_KEY}`
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     model: this.TEXT_MODEL,
