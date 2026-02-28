@@ -8,10 +8,7 @@
 **Problem:** Millions struggle to read small text on medicine labels, track expiry dates, and identify drug interactions.  
 
 **Solution:** Replace visual reading with **voice + AI** for accessible, safe medicine management.  
-
-> *"Just point, ask, and let SightSage be your medicine companion."*  
-
-
+  
 
 ## Features  
 
@@ -52,7 +49,6 @@
 - **Adjustable Voice Speed** – 5 speeds from 0.5x to 1.5x  
 - **Screen Reader Optimized** – ARIA labels throughout  
 - **Keyboard Navigation** – Full keyboard support  
-
 
 
 ## How AI Generates Content  
@@ -221,10 +217,6 @@ sightsage/
 | Expiry detection | Ensure "EXP" or date is clearly visible |
 | Voice commands | Quiet environment, speak clearly |
 | Comparison | Scan medicines one at a time |
-
-### Disclaimer  
-> SightSage provides AI-assisted information to support — not replace — your doctor's advice. Always consult your physician before changing your medication.  
-
 
 
 ## Camera Debugging  
