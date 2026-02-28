@@ -482,10 +482,12 @@ RULES:
         
         const name = this.extractMedicineName(analysis);
         const description = this.extractMedicineUse(analysis);
+        const expiry = this.extractExpiryDate(analysis);
         
         return {
             name: name || 'Unknown',
-            description: description || 'Medicine information'
+            description: description || 'Medicine information',
+            expiry: expiry || null  // ✅ Add comma after description line
         };
     }
 
@@ -678,54 +680,46 @@ RULES:
     extractExpiryDate(text) {
         if (!text) return null;
         
-        // Look for expiry date in various formats
-        const patterns = [
-            // "EXPIRY DATE: 12/2025" or "EXPIRY DATE: 31/12/2025"
-            /expiry\s*date:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-            /expiry\s*date:?\s*(\d{1,2}[-/]\d{2,4})/i, // For MM/YYYY
-            
-            // "EXP: 12/2025" or "EXP: 31/12/2025"
-            /exp:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-            /exp:?\s*(\d{1,2}[-/]\d{2,4})/i,
-            
-            // "Use by: 12/2025"
-            /use by:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-            /use by:?\s*(\d{1,2}[-/]\d{2,4})/i,
-            
-            // "Best before: 12/2025"
-            /best before:?\s*(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i,
-            /best before:?\s*(\d{1,2}[-/]\d{2,4})/i,
-            
-            // Just a date that might be expiry
-            /(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/,
-            /(\d{1,2}[-/]\d{2,4})/
-        ];
+        // Look for EXPIRY DATE: field
+        const expiryMatch = text.match(/EXPIRY DATE:\s*([^\n]+)/i);
+        if (!expiryMatch) return null;
         
-        for (const pattern of patterns) {
-            const match = text.match(pattern);
-            if (match && match[1]) {
-                let date = match[1].trim();
-                // Convert various separators to /
-                date = date.replace(/[.-]/g, '/');
-                
-                // If it's just MM/YYYY, set to last day of month for expiry comparison
-                if (date.match(/^\d{1,2}\/\d{4}$/)) {
-                    const [month, year] = date.split('/');
-                    // Get last day of the month (28/29/30/31)
-                    const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
-                    date = `${lastDay}/${month}/${year}`; // Format: DD/MM/YYYY
-                }
-                
-                return date;
-            }
+        let dateStr = expiryMatch[1].trim();
+        
+        // Remove any non-date text
+        dateStr = dateStr.replace(/[^0-9\/]/g, '').trim();
+        if (!dateStr) return null;
+        
+        return dateStr; // Return as MM/YYYY or DD/MM/YYYY format
+    }
+
+    // Update isExpired to handle both formats
+    isExpired(expiryDate) {
+        if (!expiryDate || expiryDate === 'Not visible') return false;
+        
+        let day, month, year;
+        const parts = expiryDate.split('/');
+        
+        if (parts.length === 2) {
+            // Format: MM/YYYY
+            month = parseInt(parts[0]);
+            year = parseInt(parts[1]);
+            day = new Date(year, month, 0).getDate();
+        } else if (parts.length === 3) {
+            // Format: DD/MM/YYYY
+            day = parseInt(parts[0]);
+            month = parseInt(parts[1]);
+            year = parseInt(parts[2]);
+        } else {
+            return false;
         }
         
-        // Check if AI explicitly said it's not visible
-        if (text.toLowerCase().includes('expiry date: not visible')) {
-            return null;
-        }
+        const expDate = new Date(year, month - 1, day);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        expDate.setHours(0, 0, 0, 0);
         
-        return null;
+        return expDate < today;
     }
 
     stopCamera() {
@@ -1107,15 +1101,6 @@ Provide a clear, simple answer focusing on safety.`;
     
     // ============== UTILITY FUNCTIONS ==============
 
-    isExpired(expiryDate) {
-        if (!expiryDate || expiryDate === 'Not visible') return false;
-        // FIX: safely parse DD/MM/YYYY
-        const parts = expiryDate.split('/');
-        if (parts.length !== 3) return false;
-        const [day, month, year] = parts;
-        const expDate = new Date(`${year}-${month}-${day}`);
-        return !isNaN(expDate.getTime()) && expDate < new Date();
-    }
     
     displayResults(text) {
         if (this.scanResults) {
