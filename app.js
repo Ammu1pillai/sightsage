@@ -704,7 +704,6 @@ RULES:
             // Format: MM/YYYY
             month = parseInt(parts[0]);
             year = parseInt(parts[1]);
-            // Set to last day of the month
             day = new Date(year, month, 0).getDate();
         } else if (parts.length === 3) {
             // Format: DD/MM/YYYY
@@ -717,8 +716,6 @@ RULES:
         
         const expDate = new Date(year, month - 1, day);
         const today = new Date();
-        
-        // Reset time part for accurate date comparison
         today.setHours(0, 0, 0, 0);
         expDate.setHours(0, 0, 0, 0);
         
