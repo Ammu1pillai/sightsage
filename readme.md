@@ -1,140 +1,56 @@
-# SightSage  
-## Voice-First Medicine Scanner for Elderly & Visually Impaired  
+# SightSage 🎯
+## Voice-First Medicine Scanner for Elderly & Visually Impaired
 
-## Overview  
+## Basic Details
+### Team Name: [Code Knot]
 
-**SightSage** is a voice-first medicine scanner built for elderly and visually impaired users. It uses **Groq's Llama 4 Scout 17B vision model** to identify medicines, check expiry dates, detect interactions, and provide emergency assistance—all through simple voice commands.  
+### Team Members
+- **Member 1:** Pillai Anjita - [School of Engineering,CUSAT]
+- **Member 2:** Gopika T P - [School of Engineering,CUSAT]
 
-**Problem:** Millions struggle to read small text on medicine labels, track expiry dates, and identify drug interactions.  
+### Hosted Project Link
+[https://sightsage.vercel.app](https://sightsage.vercel.app)
 
-**Solution:** Replace visual reading with **voice + AI** for accessible, safe medicine management.  
+## Project Description
+SightSage is a voice-first medicine scanner that helps elderly and visually impaired users identify medicines, check expiry dates, detect drug interactions, and access emergency assistance—all through simple voice commands. The app uses Groq's Llama 4 Scout 17B vision model to analyze medicine packaging and provide instant, accessible information.
 
-## Features  
+## The Problem Statement
+Millions of elderly and visually impaired people struggle to read small text on medicine labels, track expiry dates, and identify potential drug interactions. This leads to medication errors, missed doses, and dangerous drug combinations, especially for those managing multiple prescriptions.
 
-### Smart Medicine Scanning  
-- **Instant Medicine Recognition** – AI identifies medicine from packaging  
-- **Expiry Date Extraction** – Automatic alerts for expired medicines with **prominent warning** as the very first output  
-- **Physical Description** – Color, shape, markings for verification  
-- **Dosage Information** – Extracts dosage when visible  
-- **Safety Warnings** – Contraindications and precautions with **elderly-specific advice** and **heart patient considerations**  
+## The Solution
+SightSage replaces visual reading with an intuitive voice + AI interface. Users simply point their phone camera at any medicine, and the app instantly reads aloud all critical information including medicine name, expiry status, dosage instructions, and safety warnings. The medicine comparison feature helps prevent dangerous drug interactions by analyzing two medicines together and providing clear YES/NO answers with clinical explanations and emergency protocols.
 
-### Medicine Comparison  
-- **Interaction Detection** – Compares two medicines for conflicts with clear **YES/NO** answers  
-- **Risk Assessment** – HIGH / MEDIUM / CAUTION / SAFE warnings with detailed explanations  
-- **Clinical Reasoning** – Explains *why* medicines interact and *what happens* physiologically  
-- **Actionable Advice** – Specific guidance on timing, food restrictions, and doctor consultation   
+## Technical Details
 
-### Voice-First Interface  
-- **Voice Commands** – "Scan this", "Read warnings", "Compare medicines"  
-- **Voice Feedback** – Results read aloud automatically  
-- **Continuous Listening** – 10-second active listening window  
-- **Text Fallback** – Type questions when voice isn't suitable  
+### Technologies/Components Used
 
-### Emergency Features  
-- **SOS Button** – One-tap emergency access  
-- **Triple-Tap Detection** – Tap anywhere 3x for emergency mode  
-- **Medicine History** – Shows recent medicines with expiry status   
-- **Emergency Report** – Ready-to-show doctor with medicine list + timestamp + "Bring actual medicine packets" reminder
-- **Emergency Protocol** – Clear instructions with country-specific emergency numbers (108 India / 911 US)   
+**For Software:**
 
-### Medicine Cabinet  
-- **Auto-History** – Last 10 medicines saved to localStorage  
-- **Expiry Tracking** – Visual alerts for expired medicines  
-- **Quick Access** – Dropdown to view any previously scanned medicine  
+- **Languages used:** HTML5, CSS3, JavaScript (ES6+)
+- **Frameworks used:** No frameworks - pure vanilla JavaScript
+- **Libraries used:** Web Speech API (SpeechRecognition), Speech Synthesis API, MediaDevices API
+- **Tools used:** VS Code, Git, Groq API (Llama 4 Scout 17B), Vercel for deployment, Chrome DevTools
+- **AI Model:** meta-llama/llama-4-scout-17b-16e-instruct (Vision + Text)
 
-### Accessibility First  
-- **High Contrast Mode** – Yellow on black (WCAG AAA)  
-- **Large Text Mode** – 200% text size toggle  
-- **Adjustable Voice Speed** – 5 speeds from 0.5x to 1.5x  
-- **Screen Reader Optimized** – ARIA labels throughout  
-- **Keyboard Navigation** – Full keyboard support  
+### Features
 
-## How AI Generates Content  
+- **Smart Medicine Scanning** – AI identifies medicines from packaging, extracts expiry dates with prominent warnings, provides physical descriptions, and delivers elderly-specific advice and heart patient considerations
 
-### Context Capture  
-The app captures the camera frame and converts it to base64 image data.  
+- **Medicine Comparison** – Detects interactions with clear YES/NO answers, provides risk assessment (HIGH/MEDIUM/CAUTION/SAFE), explains clinical reasoning, and includes emergency protocols with country-specific numbers (108 India / 911 US)
 
-### Instruction Injection  
-The `analyzeWithGroq()` function sends a crafted prompt to Llama 4 Scout:  
+- **Voice-First Interface** – Supports voice commands like "Scan this", "Read warnings", and "Compare medicines", with automatic voice feedback and continuous 10-second listening
 
-```javascript
-const prompt = `You are SightSage, a caring medicine assistant. 
-Look at this medicine image and tell me about it.
+- **Emergency Features** – One-tap SOS button, triple-tap anywhere for emergency mode, medicine history with expiry tracking, and ready-to-show doctor reports with "Bring actual medicine packets" reminder
 
-⚠️ CRITICAL RULE: If the expiry date has passed, 
-your VERY FIRST WORDS MUST BE "DO NOT TAKE THIS MEDICINE - IT HAS EXPIRED".
+- **Accessibility First** – High contrast mode (yellow on black, WCAG AAA), 200% large text toggle, adjustable voice speed (0.5x to 1.5x), screen reader optimization, and full keyboard navigation
 
-Provide:
-MEDICINE NAME: [exact name]
-EXPIRY DATE: [exact date or "NOT VISIBLE"]
-APPEARANCE: [color, shape, markings]
-USES: [what it's used for]
-HOW TO TAKE: [with/without food, timing instructions]
-COMMON SIDE EFFECTS: [brief list]
-ELDERLY ADVICE: [special considerations for elderly patients]
-HEART PATIENTS: [what heart patients need to know]
-AVOID: [foods, drinks, medicines to avoid]
-SAFETY TIP: [one practical tip]`;
-```
+## Implementation
 
-### Post-Processing  
-```javascript
-// Expiry detection with prominent warning
-if (medicineInfo.expiry && this.isExpired(medicineInfo.expiry)) {
-    this.showEmergency('⚠️ EXPIRED MEDICINE - DO NOT TAKE');
-    // Ensures warning appears as first output
-}
-
-// Storage
-cabinet.unshift({
-    name: medicine.name || 'Unknown',
-    expiry: medicine.expiry || null,
-    description: medicine.description,
-    scannedAt: new Date().toISOString(),
-    expired: medicine.expiry ? this.isExpired(medicine.expiry) : false
-});
-```
-
-### API Configuration  
-- **Model**: `meta-llama/llama-4-scout-17b-16e-instruct`  
-- **Temperature**: 0.4 (balances creativity and accuracy)  
-- **Max tokens**: 800 (sufficient for medicine details)  
-- **Image quality**: 0.85 JPEG compression  
-
-## Technology Stack  
-
-### Core Architecture  
-```
-Frontend: HTML5, CSS3, JavaScript (ES6+)
-AI Engine: Groq Llama 4 Scout 17B (Vision + Text)
-Voice Input: Web Speech API (SpeechRecognition)
-Voice Output: Speech Synthesis API
-Camera: MediaDevices API + WebRTC
-Storage: localStorage
-PWA: Service Workers + Manifest.json
-Styling: CSS3 with Glassmorphism
-Fonts: Lora (headings) + Hind (body)
-Deployment: Vercel
-```
-
-### Key Integrations  
-- **Groq API** – Ultra-fast inference (< 2 seconds per scan)  
-- **Llama 4 Scout** – 17B parameter vision-language model  
-- **WebRTC** – Camera streaming with fallback constraints  
-- **Web Speech** – Cross-browser voice recognition  
-
-## Installation and Setup  
-
-### Prerequisites  
-- Modern browser (Chrome 80+, Safari 14+, Edge 80+, Firefox 85+)  
-- HTTPS server (or localhost for development)  
-- [Groq API Key](https://console.groq.com)  
-
-### Quick Start (5 Minutes)  
+### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/sightsage.git
+git clone https://github.com/Ammu1pillai/sightsage.git
 cd sightsage
 
 # Get a Groq API Key from https://console.groq.com
@@ -142,103 +58,195 @@ cd sightsage
 # Configure the API key in app.js (line 11)
 # this.API_KEY = 'your-groq-api-key-here';
 
-# Serve the files locally
+# Serve the files locally using any static server
 python -m http.server 8000
 # OR
 npx http-server
+```
 
+### Run
+```
 # Open in browser
-# http://localhost:8000
+http://localhost:8000
+
+# For production deployment
+# Push to GitHub and connect to Vercel for automatic deployment
 ```
 
-### File Structure  
+## Project Documentation
+
+### Screenshots
+
+![Medicine Scan Interface](https://via.placeholder.com/800x400?text=Medicine+Scan+Interface)
+*Main scanning interface showing camera view with medicine detection and voice command button*
+
+![Medicine Comparison Result](https://via.placeholder.com/800x400?text=Medicine+Comparison)
+*Medicine comparison feature showing interaction analysis with risk level and emergency instructions*
+
+![Accessibility Controls](https://via.placeholder.com/800x400?text=Accessibility+Settings)
+*Accessibility panel with high contrast mode, large text toggle, and voice speed controls*
+
+### Diagrams
+
+#### System Architecture
+
 ```
-sightsage/
-├── index.html          # Main application shell
-├── styles.css          # All styling + glassmorphism effects
-├── app.js              # Complete application logic
-├── manifest.json       # PWA configuration
-├── sw.js               # Service Worker for offline
-├── camera-debug.html   # Camera troubleshooting tool
-├── vercel.json         # Vercel deployment configuration
-└── README.md           # Documentation
-```
-
-
-### PWA Installation  
-**Android (Chrome):** Menu → "Add to Home screen"  
-**iOS (Safari):** Share button → "Add to Home Screen"  
-**Desktop (Chrome/Edge):** Click install icon in address bar  
-
-**Offline Capabilities:** Service Worker caches core files; medicine cabinet available offline  
-
-## Project Demo  
-
-**Live Demo:** [https://sightsage.vercel.app](https://sightsage.vercel.app)  
-
-**Video Walkthrough:** [Watch Demo](https://youtu.be/your-demo-link)  
-
-## Our Team  
-
-| Name | Role |
-|------|------|
-| Pillai Anjita | Lead Developer, AI Integration |
-| Gopika T P | UI/UX Designer, Accessibility |
-
-## GitHub Repository  
-
-**Source Code:** https://github.com/Ammu1pillai/sightsage.git 
-
-## Important Notes  
-
-### API Limits (Free Tier)  
-- **Requests per minute**: ~30  
-- **Tokens per minute**: ~5,000  
-- **Image size limit**: ~20MB  
-- **Security**: Replace demo API key with your own for production  
-- **Monitoring**: Usage is tracked; excessive calls may be throttled  
-
-### Best Practices  
-| For best results | Do this |
-|-----------------|---------|
-| Medicine scanning | Hold 15-20 cm from camera, good lighting |
-| Expiry detection | Ensure "EXP" or date is clearly visible |
-| Voice commands | Quiet environment, speak clearly |
-| Comparison | Scan medicines one at a time |
-
-
-## Camera Debugging  
-
-Having camera issues? Open `camera-debug.html` for a 5-step diagnostic:  
-
-| Step | Action | What It Tests |
-|------|--------|---------------|
-| Step 1 | Check API | Verifies `navigator.mediaDevices` availability |
-| Step 2 | List Devices | Enumerates all cameras on device |
-| Step 3 | Open Camera | Tests `environment` facingMode |
-| Step 3b | Fallback | Tests with no constraints |
-| Step 4 | Capture Frame | Draws video frame to canvas |
-| Step 5 | Check Image Data | Verifies frame isn't blank |
-
-### Common Camera Fixes  
-```javascript
-// If facingMode: 'environment' fails, app automatically falls back to:
-{ video: true }
-
-// If camera doesn't initialize, check:
-1. HTTPS required (camera needs secure context)
-2. Browser permissions (🔒 icon in address bar)
-3. No other apps using camera
-4. Device has camera hardware
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐     ┌──────────────┐
+│   Camera    │────▶│  Canvas      │────▶│   Groq API  │────▶│ Llama 4 Scout│
+│  (WebRTC)   │     │  Capture     │     │  Endpoint   │     │  17B Model   │
+└─────────────┘     └──────────────┘     └─────────────┘     └──────────────┘
+                                                                    │
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐           ▼
+│   Voice     │◀────│   Speech     │     │   Result    │     ┌──────────────┐
+│   Output    │     │  Synthesis   │◀────│ Processing  │◀────│   AI Response│
+└─────────────┘     └──────────────┘     └─────────────┘     └──────────────┘
+       ▲                    ▲                   │                    │
+       │                    │                   │                    │
+┌──────┴──────┐     ┌───────┴───────┐     ┌────┴────┐     ┌───────┴───────┐
+│   Voice     │     │  localStorage  │     │Medicine │     │   Expiry      │
+│   Input     │     │   Cabinet      │     │Compare  │     │   Detection   │
+└─────────────┘     └───────────────┘     └─────────┘     └───────────────┘
 ```
 
-## Contributing  
+*Architecture Diagram: The system captures camera frames, sends them to Groq's Llama 4 Scout for analysis, processes the response for expiry detection and interaction checking, stores history in localStorage, and provides voice feedback through Web Speech API*
 
-We welcome contributions! Here's how:  
+#### Application Workflow
 
-1. **Fork** the repository  
-2. **Create** feature branch (`git checkout -b feature/amazing`)  
-3. **Commit** changes (`git commit -m 'Add feature'`)  
-4. **Push** to branch (`git push origin feature/amazing`)  
-5. **Open** a Pull Request  
+```
+┌─────────────┐
+│   Start     │
+└──────┬──────┘
+       ▼
+┌─────────────┐     ┌─────────────────┐
+│ Voice       │────▶│ "Scan this"     │
+│ Command     │     │ Command Detected│
+└─────────────┘     └────────┬────────┘
+       ▲                     ▼
+       │              ┌─────────────┐
+       │              │ Open Camera │
+       │              └──────┬──────┘
+┌─────────────┐              ▼
+│"Read aloud" │       ┌─────────────┐
+│   Results   │◀──────│ Capture &   │
+└─────────────┘       │ Send Frame  │
+       ▲              └──────┬──────┘
+       │                     ▼
+┌─────────────┐       ┌─────────────┐
+│ Process &   │       │ Groq API    │
+│ Store in    │◀──────│ Response    │
+│ Cabinet     │       │             │
+└─────────────┘       └─────────────┘
+       │                     ▲
+       ▼                     │
+┌─────────────┐       ┌─────────────┐
+│ Check       │       │ Expired?    │
+│ Interaction?│──────▶│ Show Warning│
+└─────────────┘       └─────────────┘
+```
 
+*Workflow: User gives voice command → Camera opens and captures image → Frame sent to Groq API → AI analyzes and returns medicine details → System checks expiry and shows warnings → Results stored in cabinet → Voice reads aloud results*
+
+### API Documentation
+
+**Base URL:** `https://api.groq.com/openai/v1`
+
+#### Endpoints
+
+**POST /chat/completions**
+
+*Description:* Sends medicine image for AI analysis
+
+**Headers:**
+```
+Authorization: Bearer [API_KEY]
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+  "messages": [
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "text",
+          "text": "You are SightSage, a caring medicine assistant. Look at this medicine image and tell me about it. ⚠️ CRITICAL RULE: If the expiry date has passed, your VERY FIRST WORDS MUST BE 'DO NOT TAKE THIS MEDICINE - IT HAS EXPIRED'."
+        },
+        {
+          "type": "image_url",
+          "image_url": {
+            "url": "data:image/jpeg;base64,[BASE64_IMAGE]"
+          }
+        }
+      ]
+    }
+  ],
+  "temperature": 0.4,
+  "max_tokens": 800
+}
+```
+
+**Response:**
+```json
+{
+  "choices": [
+    {
+      "message": {
+        "content": "MEDICINE NAME: [medicine name]\nEXPIRY DATE: [date or NOT VISIBLE]\nAPPEARANCE: [description]\nUSES: [indications]\nHOW TO TAKE: [instructions]\nCOMMON SIDE EFFECTS: [list]\nELDERLY ADVICE: [special considerations]\nHEART PATIENTS: [what to know]\nAVOID: [foods/drugs to avoid]\nSAFETY TIP: [practical advice]"
+      }
+    }
+  ]
+}
+```
+
+### Project Demo
+
+#### Video
+[Add your demo video link here - YouTube, Google Drive, etc.]
+
+*The video demonstrates the complete user journey: opening the app, using voice commands to scan a medicine, receiving expiry warnings, comparing two medicines for interactions, and accessing the emergency SOS feature. It highlights the voice-first interface and accessibility features throughout.*
+
+#### Additional Demos
+- **Live Site:** [https://sightsage.vercel.app](https://sightsage.vercel.app)
+- **GitHub Repository:** [https://github.com/Ammu1pillai/sightsage.git](https://github.com/Ammu1pillai/sightsage.git)
+- **Camera Debug Tool:** `/camera-debug.html` (included in repository for troubleshooting)
+
+### AI Tools Used
+
+**Tool Used:** Groq,deepseek
+
+**Purpose:**
+- Generated boilerplate code for camera handling and WebRTC implementation
+- Debugging assistance for async/await patterns in speech recognition
+- Optimizing the prompt engineering for better medicine extraction results
+- Code review and accessibility improvements
+
+**Key Prompts Used:**
+- "Create a function to handle camera stream with fallback constraints for mobile devices"
+- "Debug this speech recognition code that stops working after first command"
+- "Optimize the expiry date parsing logic to handle multiple date formats"
+- "Generate ARIA labels for screen reader compatibility"
+
+**Percentage of AI-generated code:** Approximately 75%
+
+**Human Contributions:**
+- Architecture design and system planning
+- UI/UX design decisions for elderly users
+- Integration of Groq API and response parsing
+- Accessibility testing and improvements
+- Medicine comparison logic and emergency protocol design
+
+### Team Contributions
+
+- **Pillai Anjita:** Lead Developer, AI Integration - Implemented Groq API connection, camera handling, voice recognition, and medicine comparison logic. Built the core application architecture and deployed on Vercel.
+
+- **Gopika T P:** UI/UX Designer, Accessibility - Designed the glassmorphism interface, implemented high contrast mode, large text toggle, and voice speed controls. Created the medicine cabinet and emergency features. Ensured WCAG AAA compliance throughout.
+
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+**Made with ❤️ at TinkerHub**
