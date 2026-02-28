@@ -299,9 +299,7 @@ class SightSage {
     async analyzeWithGroq(imageData) {
         const base64Image = imageData.split(',')[1];
         
-        const prompt = `You are SightSage, a patient medicine assistant for elderly and visually impaired users. Look at this medicine image and provide information in an EXACT, conversational, clear way.
-
-Please cover these points naturally (not as a numbered list):
+        const prompt = `You are SightSage, a caring medicine assistant for elderly users. Look at this medicine image and tell me about it in a warm, natural way.
 
 IMPORTANT - EXPIRY DATE: Look carefully at the image for any expiry date. It might be labeled as "EXP", "Expiry", "Use by", "Best before", or a date in DD/MM/YYYY or MM/YYYY format. If you see it, state it exactly as shown.
 
