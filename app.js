@@ -800,15 +800,25 @@ RULES:
         
         this.updateStatus('🔄 Comparing medicines...');
         
-        const prompt = `Compare these two medicines:
-Medicine 1: ${JSON.stringify(this.medicines.compare1)}
-Medicine 2: ${JSON.stringify(this.medicines.compare2)}
+        const prompt = `Compare these two medicines and provide a VERY CONCISE response:
 
-Provide:
-1. Shared ingredients
-2. Interaction warning (Critical/Caution/Safe)
-3. Simple advice
-4. Overall safety assessment`;
+    Medicine 1: ${JSON.stringify(this.medicines.compare1)}
+    Medicine 2: ${JSON.stringify(this.medicines.compare2)}
+
+    Format your response exactly like this:
+
+    ⚠️ INTERACTION LEVEL: [CRITICAL / CAUTION / SAFE] ⚠️
+    (BE HONEST - if dangerous, say CRITICAL)
+
+    1. Shared ingredients: [brief list or "None"]
+
+    2. What happens: [1 sentence explanation]
+
+    3. Simple advice: [1 sentence]
+
+    4. Bottom line: [1 sentence]
+
+    Keep it short and direct. No long explanations. Just the facts.`;
         
         try {
             const response = await fetch(this.API_URL, {
@@ -821,7 +831,7 @@ Provide:
                     model: this.TEXT_MODEL,
                     messages: [{ role: "user", content: prompt }],
                     temperature: 0.3,
-                    max_tokens: 1024
+                    max_tokens: 300 // Reduced token count for shorter responses
                 })
             });
             
@@ -829,10 +839,12 @@ Provide:
             const comparison = data.choices[0].message.content;
             
             if (this.comparisonResults) {
+                // Format with line breaks for readability
                 this.comparisonResults.innerHTML = comparison.replace(/\n/g, '<br>');
                 this.comparisonResults.classList.remove('hidden');
             }
             
+            // Check for critical warning
             if (comparison.toLowerCase().includes('critical')) {
                 this.showEmergency('⚠️ CRITICAL INTERACTION DETECTED');
             }
