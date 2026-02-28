@@ -8,23 +8,22 @@
 **Problem:** Millions struggle to read small text on medicine labels, track expiry dates, and identify drug interactions.  
 
 **Solution:** Replace visual reading with **voice + AI** for accessible, safe medicine management.  
-  
 
 ## Features  
 
 ### Smart Medicine Scanning  
 - **Instant Medicine Recognition** – AI identifies medicine from packaging  
-- **Expiry Date Extraction** – Automatic alerts for expired medicines  
-- **Active Ingredients** – Lists ingredients in plain English  
+- **Expiry Date Extraction** – Automatic alerts for expired medicines with **prominent warning** as the very first output  
 - **Physical Description** – Color, shape, markings for verification  
 - **Dosage Information** – Extracts dosage when visible  
-- **Safety Warnings** – Contraindications and precautions  
+- **Safety Warnings** – Contraindications and precautions with **elderly-specific advice** and **heart patient considerations**  
 
 ### Medicine Comparison  
-- **Interaction Detection** – Compares two medicines for conflicts  
-- **Shared Ingredients** – Identifies overlapping active ingredients  
-- **Risk Assessment** – Critical / Caution / Safe warnings  
-- **Dosage Spacing** – Recommends time gaps between medicines  
+- **Interaction Detection** – Compares two medicines for conflicts with clear **YES/NO** answers  
+- **Risk Assessment** – HIGH / MEDIUM / CAUTION / SAFE warnings with detailed explanations  
+- **Clinical Reasoning** – Explains *why* medicines interact and *what happens* physiologically  
+- **Actionable Advice** – Specific guidance on timing, food restrictions, and doctor consultation  
+- **Emergency Protocol** – Clear instructions with country-specific emergency numbers (108 India / 911 US)  
 
 ### Voice-First Interface  
 - **Voice Commands** – "Scan this", "Read warnings", "Compare medicines"  
@@ -36,7 +35,7 @@
 - **SOS Button** – One-tap emergency access  
 - **Triple-Tap Detection** – Tap anywhere 3x for emergency mode  
 - **Medicine History** – Shows recent medicines with expiry status  
-- **Emergency Report** – Ready-to-show doctor with medicine list + timestamp  
+- **Emergency Report** – Ready-to-show doctor with medicine list + timestamp + "Bring actual medicine packets" reminder  
 
 ### Medicine Cabinet  
 - **Auto-History** – Last 10 medicines saved to localStorage  
@@ -49,7 +48,6 @@
 - **Adjustable Voice Speed** – 5 speeds from 0.5x to 1.5x  
 - **Screen Reader Optimized** – ARIA labels throughout  
 - **Keyboard Navigation** – Full keyboard support  
-
 
 ## How AI Generates Content  
 
@@ -71,19 +69,20 @@ MEDICINE NAME: [exact name]
 EXPIRY DATE: [exact date or "NOT VISIBLE"]
 APPEARANCE: [color, shape, markings]
 USES: [what it's used for]
-HOW TO TAKE: [with/without food]
+HOW TO TAKE: [with/without food, timing instructions]
 COMMON SIDE EFFECTS: [brief list]
-ELDERLY ADVICE: [special considerations]
-HEART PATIENTS: [what to know]
+ELDERLY ADVICE: [special considerations for elderly patients]
+HEART PATIENTS: [what heart patients need to know]
 AVOID: [foods, drinks, medicines to avoid]
 SAFETY TIP: [one practical tip]`;
 ```
 
 ### Post-Processing  
 ```javascript
-// Expiry detection
+// Expiry detection with prominent warning
 if (medicineInfo.expiry && this.isExpired(medicineInfo.expiry)) {
     this.showEmergency('⚠️ EXPIRED MEDICINE - DO NOT TAKE');
+    // Ensures warning appears as first output
 }
 
 // Storage
@@ -102,8 +101,6 @@ cabinet.unshift({
 - **Max tokens**: 800 (sufficient for medicine details)  
 - **Image quality**: 0.85 JPEG compression  
 
-
-
 ## Technology Stack  
 
 ### Core Architecture  
@@ -117,6 +114,7 @@ Storage: localStorage
 PWA: Service Workers + Manifest.json
 Styling: CSS3 with Glassmorphism
 Fonts: Lora (headings) + Hind (body)
+Deployment: Vercel
 ```
 
 ### Key Integrations  
@@ -124,8 +122,6 @@ Fonts: Lora (headings) + Hind (body)
 - **Llama 4 Scout** – 17B parameter vision-language model  
 - **WebRTC** – Camera streaming with fallback constraints  
 - **Web Speech** – Cross-browser voice recognition  
-
-
 
 ## Installation and Setup  
 
@@ -164,8 +160,10 @@ sightsage/
 ├── manifest.json       # PWA configuration
 ├── sw.js               # Service Worker for offline
 ├── camera-debug.html   # Camera troubleshooting tool
+├── vercel.json         # Vercel deployment configuration
 └── README.md           # Documentation
 ```
+
 
 ### PWA Installation  
 **Android (Chrome):** Menu → "Add to Home screen"  
@@ -174,15 +172,11 @@ sightsage/
 
 **Offline Capabilities:** Service Worker caches core files; medicine cabinet available offline  
 
-
-
 ## Project Demo  
 
 **Live Demo:** [https://sightsage.vercel.app](https://sightsage.vercel.app)  
 
 **Video Walkthrough:** [Watch Demo](https://youtu.be/your-demo-link)  
-
-
 
 ## Our Team  
 
@@ -191,15 +185,9 @@ sightsage/
 | Pillai Anjita | Lead Developer, AI Integration |
 | Gopika T P | UI/UX Designer, Accessibility |
 
-
-
 ## GitHub Repository  
 
 **Source Code:** [https://github.com/yourusername/sightsage](https://github.com/yourusername/sightsage)  
-
-**Report Issues:** [https://github.com/yourusername/sightsage/issues](https://github.com/yourusername/sightsage/issues)  
-
-
 
 ## Important Notes  
 
@@ -253,3 +241,4 @@ We welcome contributions! Here's how:
 3. **Commit** changes (`git commit -m 'Add feature'`)  
 4. **Push** to branch (`git push origin feature/amazing`)  
 5. **Open** a Pull Request  
+
