@@ -187,7 +187,7 @@ sightsage/
 
 ## GitHub Repository  
 
-**Source Code:** [https://github.com/yourusername/sightsage](https://github.com/yourusername/sightsage)  
+**Source Code:** https://github.com/Ammu1pillai/sightsage.git 
 
 ## Important Notes  
 
