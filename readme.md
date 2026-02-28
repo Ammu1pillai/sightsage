@@ -90,14 +90,11 @@ http://localhost:8000
 
 #### System Architecture
 
-```
 https://drive.google.com/file/d/1GM2a_cf6Wy8GZaIMn2GRmcAxRh__3lek/view?usp=sharing
-
 *Architecture Diagram: The system captures camera frames, sends them to Groq's Llama 4 Scout for analysis, processes the response for expiry detection and interaction checking, stores history in localStorage, and provides voice feedback through Web Speech API*
 
 #### Application Workflow
 
-```
 https://drive.google.com/file/d/1ubKzJD9l8gxD37SQGTjL4FLQBKN2jho_/view?usp=drive_link
 *Workflow: User gives voice command → Camera opens and captures image → Frame sent to Groq API → AI analyzes and returns medicine details → System checks expiry and shows warnings → Results stored in cabinet → Voice reads aloud results*
 
