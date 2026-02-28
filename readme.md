@@ -1,8 +1,6 @@
 # SightSage  
 ## Voice-First Medicine Scanner for Elderly & Visually Impaired  
 
----
-
 ## Overview  
 
 **SightSage** is a voice-first medicine scanner built for elderly and visually impaired users. It uses **Groq's Llama 4 Scout 17B vision model** to identify medicines, check expiry dates, detect interactions, and provide emergency assistance—all through simple voice commands.  
@@ -13,7 +11,7 @@
 
 > *"Just point, ask, and let SightSage be your medicine companion."*  
 
----
+
 
 ## Features  
 
@@ -55,7 +53,7 @@
 - **Screen Reader Optimized** – ARIA labels throughout  
 - **Keyboard Navigation** – Full keyboard support  
 
----
+
 
 ## How AI Generates Content  
 
@@ -108,7 +106,7 @@ cabinet.unshift({
 - **Max tokens**: 800 (sufficient for medicine details)  
 - **Image quality**: 0.85 JPEG compression  
 
----
+
 
 ## Technology Stack  
 
@@ -131,7 +129,7 @@ Fonts: Lora (headings) + Hind (body)
 - **WebRTC** – Camera streaming with fallback constraints  
 - **Web Speech** – Cross-browser voice recognition  
 
----
+
 
 ## Installation and Setup  
 
@@ -180,7 +178,7 @@ sightsage/
 
 **Offline Capabilities:** Service Worker caches core files; medicine cabinet available offline  
 
----
+
 
 ## Project Demo  
 
@@ -188,7 +186,7 @@ sightsage/
 
 **Video Walkthrough:** [Watch Demo](https://youtu.be/your-demo-link)  
 
----
+
 
 ## Our Team  
 
@@ -197,7 +195,7 @@ sightsage/
 | Pillai Anjita | Lead Developer, AI Integration |
 | Gopika T P | UI/UX Designer, Accessibility |
 
----
+
 
 ## GitHub Repository  
 
@@ -205,7 +203,7 @@ sightsage/
 
 **Report Issues:** [https://github.com/yourusername/sightsage/issues](https://github.com/yourusername/sightsage/issues)  
 
----
+
 
 ## Important Notes  
 
@@ -227,7 +225,7 @@ sightsage/
 ### Disclaimer  
 > SightSage provides AI-assisted information to support — not replace — your doctor's advice. Always consult your physician before changing your medication.  
 
----
+
 
 ## Camera Debugging  
 
@@ -253,9 +251,6 @@ Having camera issues? Open `camera-debug.html` for a 5-step diagnostic:
 3. No other apps using camera
 4. Device has camera hardware
 ```
-
----
-
 
 ## Contributing  
 
