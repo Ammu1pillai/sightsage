@@ -800,25 +800,24 @@ RULES:
         
         this.updateStatus('🔄 Comparing medicines...');
         
-        const prompt = `Compare these two medicines and provide a VERY CONCISE response:
+        const prompt = `Compare these two medicines and tell me about taking them together:
 
     Medicine 1: ${JSON.stringify(this.medicines.compare1)}
     Medicine 2: ${JSON.stringify(this.medicines.compare2)}
 
-    Format your response exactly like this:
+    Give a response in this simple list format:
 
-    ⚠️ INTERACTION LEVEL: [CRITICAL / CAUTION / SAFE] ⚠️
-    (BE HONEST - if dangerous, say CRITICAL)
+    • CAN THEY BE TAKEN TOGETHER? [YES / NO / WITH CAUTION]
 
-    1. Shared ingredients: [brief list or "None"]
+    • WHY? [1-2 sentences explaining the reason]
 
-    2. What happens: [1 sentence explanation]
+    • WHAT HAPPENS? [1-2 sentences describing the effect]
 
-    3. Simple advice: [1 sentence]
+    • RISK LEVEL: [HIGH / MEDIUM / LOW]
 
-    4. Bottom line: [1 sentence]
+    • ADVICE: [One clear sentence what to do]
 
-    Keep it short and direct. No long explanations. Just the facts.`;
+    Keep it simple and clear. No extra text, just these 5 bullet points.`;
         
         try {
             const response = await fetch(this.API_URL, {
@@ -831,7 +830,7 @@ RULES:
                     model: this.TEXT_MODEL,
                     messages: [{ role: "user", content: prompt }],
                     temperature: 0.3,
-                    max_tokens: 300 // Reduced token count for shorter responses
+                    max_tokens: 250
                 })
             });
             
@@ -839,14 +838,13 @@ RULES:
             const comparison = data.choices[0].message.content;
             
             if (this.comparisonResults) {
-                // Format with line breaks for readability
                 this.comparisonResults.innerHTML = comparison.replace(/\n/g, '<br>');
                 this.comparisonResults.classList.remove('hidden');
             }
             
-            // Check for critical warning
-            if (comparison.toLowerCase().includes('critical')) {
-                this.showEmergency('⚠️ CRITICAL INTERACTION DETECTED');
+            // Check for high risk
+            if (comparison.toLowerCase().includes('risk level: high')) {
+                this.showEmergency('⚠️ HIGH RISK COMBINATION - READ CAREFULLY');
             }
             
             this.speak("Comparison complete");
