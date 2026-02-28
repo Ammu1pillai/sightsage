@@ -1,4 +1,4 @@
-# SightSage 🎯
+# SightSage
 ## Voice-First Medicine Scanner for Elderly & Visually Impaired
 
 ## Basic Details
